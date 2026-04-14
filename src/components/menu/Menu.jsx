@@ -225,14 +225,18 @@ export default function Menu({ products, categories: rawCategories, loading, err
                                 ref={(el) => { sectionRefs.current[cat.id] = el; }}
                             >
                                 <MotionDiv variants={slideLeft}>
-                                    <div className="flex items-center gap-4 mb-6">
+                                    <div className="flex items-center gap-3 mb-7">
+                                        <div style={{ width: '3px', height: '1.6rem', background: '#2d6a2d', borderRadius: '2px', flexShrink: 0 }} />
                                         <h2
-                                            className="font-display font-semibold text-2xl sm:text-3xl uppercase shrink-0"
-                                            style={{ color: '#0a0a0a' }}
+                                            className="font-display uppercase shrink-0"
+                                            style={{ fontSize: 'clamp(1.6rem, 6vw, 2.2rem)', color: '#0a0a0a', letterSpacing: '0.01em', lineHeight: 1 }}
                                         >
                                             {cat.name}
                                         </h2>
-                                        <div className="flex-1 h-px" style={{ background: 'rgba(0,0,0,0.10)' }} />
+                                        <div
+                                            className="flex-1"
+                                            style={{ height: '1px', background: 'linear-gradient(to right, rgba(45,106,45,0.18) 0%, transparent 100%)' }}
+                                        />
                                     </div>
                                 </MotionDiv>
 

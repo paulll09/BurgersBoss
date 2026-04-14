@@ -1,86 +1,135 @@
 import { useContext, useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useCartStore } from '../../store/cartStore';
 import { Plus, Image as ImageIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { BarCtx } from '../../context/barCtx';
 import { getEffectivePrice, hasDiscount, getEffectiveVariantPrice, variantHasDiscount } from '../../utils/price';
+import { PREMIUM_EASE, VIEWPORT } from '../../lib/motion';
 
-const FOREST      = '#2d6a2d';
-const FOREST_DARK = '#1a4a1a';
-const AMBER       = '#F59E0B';
+/* ── Paleta cinematográfica ─────────────────── */
+const FOREST       = '#2d6a2d';
+const FOREST_DARK  = '#1a4a1a';
+const GREEN_BRIGHT = '#86efac';   /* precio — alta legibilidad sobre oscuro */
+const AMBER        = '#F59E0B';   /* solo badges de descuento */
+const CARD_BG      = '#111111';
+const CARD_SURFACE = '#181818';
+
+/* ── Variantes — solo transform + opacity (GPU) ── */
+const cardVariants = {
+    hidden:  { opacity: 0, y: 44, scale: 0.97 },
+    visible: {
+        opacity: 1, y: 0, scale: 1,
+        transition: { type: 'tween', duration: 0.60, ease: PREMIUM_EASE },
+    },
+};
+
+const imgZoomVariants = {
+    hidden:  { scale: 1.10 },
+    visible: {
+        scale: 1,
+        transition: { type: 'tween', duration: 0.70, ease: PREMIUM_EASE, delay: 0.05 },
+    },
+};
 
 export default function ProductCard({ product, categoryName }) {
-    const addItem = useCartStore((state) => state.addItem);
+    const addItem   = useCartStore((s) => s.addItem);
     const { isOpen } = useContext(BarCtx);
     const [imgLoaded, setImgLoaded] = useState(false);
+    const reduced = useReducedMotion();
 
-    const variants = product.product_variants || [];
+    const variants    = product.product_variants || [];
     const hasVariants = variants.length > 0;
 
     const handleAdd = (e) => {
         e.stopPropagation();
-        const effectivePrice = getEffectivePrice(product);
-        addItem({ ...product, category_name: categoryName, price: effectivePrice, originalPrice: product.price });
+        const price = getEffectivePrice(product);
+        addItem({ ...product, category_name: categoryName, price, originalPrice: product.price });
         toast.success(`${product.name} agregado`);
     };
 
     const handleAddVariant = (e, variant) => {
         e.stopPropagation();
-        const effectivePrice = getEffectiveVariantPrice(variant);
-        addItem(
-            { ...product, category_name: categoryName },
-            { ...variant, price: effectivePrice }
-        );
+        const price = getEffectiveVariantPrice(variant);
+        addItem({ ...product, category_name: categoryName }, { ...variant, price });
         toast.success(`${product.name} (${variant.name}) agregado`);
     };
 
     return (
-        <div
-            className="overflow-hidden rounded-2xl"
+        <motion.div
+            className="overflow-hidden rounded-3xl"
             style={{
-                background: '#ffffff',
-                border: '1px solid rgba(45,106,45,0.12)',
-                boxShadow: '0 2px 14px rgba(45,106,45,0.08), 0 1px 3px rgba(0,0,0,0.05)',
+                background: CARD_BG,
+                boxShadow: '0 8px 32px rgba(0,0,0,0.22), 0 2px 8px rgba(0,0,0,0.14)',
+                transform: 'translateZ(0)',
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden',
             }}
+            variants={cardVariants}
+            initial={reduced ? 'visible' : 'hidden'}
+            whileInView="visible"
+            viewport={VIEWPORT}
         >
-            {/* ── Imagen ──────────────────────────────── */}
-            <div className="relative w-full aspect-[16/9] overflow-hidden" style={{ background: '#eef3ee' }}>
+            {/* ── Imagen — limpia, sin overlays ────── */}
+            <div
+                className="relative w-full overflow-hidden"
+                style={{ aspectRatio: '16/9', background: CARD_SURFACE }}
+            >
                 {product.image_url ? (
                     <>
+                        {/* Skeleton mientras carga */}
                         {!imgLoaded && (
                             <div
                                 className="absolute inset-0"
                                 style={{
-                                    background: 'linear-gradient(110deg, #e8efe8 30%, #f2f6f2 50%, #e8efe8 70%)',
+                                    background: 'linear-gradient(110deg, #181818 30%, #222 50%, #181818 70%)',
                                     backgroundSize: '200% 100%',
                                     animation: 'shimmer 1.6s ease-in-out infinite',
                                 }}
                             />
                         )}
-                        <img
-                            src={product.image_url}
-                            alt={product.name}
-                            loading="lazy"
-                            onLoad={() => setImgLoaded(true)}
-                            className={`w-full h-full object-cover transition-all duration-500 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
-                        />
-                        {/* Gradiente sutil abajo para conectar con el panel */}
-                        <div
-                            className="absolute inset-x-0 bottom-0 h-12 pointer-events-none"
-                            style={{ background: 'linear-gradient(to top, rgba(255,255,255,0.5), transparent)' }}
-                        />
+                        {/* Zoom-out de entrada — efecto pop */}
+                        <motion.div
+                            className="w-full h-full"
+                            style={{
+                                backfaceVisibility: 'hidden',
+                                WebkitBackfaceVisibility: 'hidden',
+                            }}
+                            variants={reduced ? {} : imgZoomVariants}
+                            initial={reduced ? undefined : 'hidden'}
+                            whileInView={reduced ? undefined : 'visible'}
+                            viewport={VIEWPORT}
+                        >
+                            <img
+                                src={product.image_url}
+                                alt={product.name}
+                                loading="lazy"
+                                decoding="async"
+                                onLoad={() => setImgLoaded(true)}
+                                draggable="false"
+                                className="w-full h-full object-cover"
+                                style={{
+                                    opacity: imgLoaded ? 1 : 0,
+                                    transition: 'opacity 0.45s ease',
+                                    display: 'block',
+                                }}
+                            />
+                        </motion.div>
                     </>
                 ) : (
-                    <div className="w-full h-full flex items-center justify-center" style={{ color: 'rgba(45,106,45,0.20)' }}>
+                    <div
+                        className="w-full h-full flex items-center justify-center"
+                        style={{ color: 'rgba(255,255,255,0.12)' }}
+                    >
                         <ImageIcon className="w-12 h-12" />
                     </div>
                 )}
 
-                {/* Badge de descuento — ámbar solo aquí como alerta */}
+                {/* Badge — ámbar, único acento cálido */}
                 {!hasVariants && hasDiscount(product) && (
                     <div
                         className="absolute top-3 left-3 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"
-                        style={{ background: AMBER, color: '#0a0a0a', boxShadow: '0 2px 8px rgba(245,158,11,0.35)' }}
+                        style={{ background: AMBER, color: '#0a0a0a', boxShadow: '0 2px 8px rgba(245,158,11,0.40)' }}
                     >
                         -{product.discount}%
                     </div>
@@ -88,50 +137,57 @@ export default function ProductCard({ product, categoryName }) {
                 {hasVariants && variants.some(v => variantHasDiscount(v)) && (
                     <div
                         className="absolute top-3 left-3 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"
-                        style={{ background: AMBER, color: '#0a0a0a', boxShadow: '0 2px 8px rgba(245,158,11,0.35)' }}
+                        style={{ background: AMBER, color: '#0a0a0a', boxShadow: '0 2px 8px rgba(245,158,11,0.40)' }}
                     >
                         PROMO
                     </div>
                 )}
             </div>
 
-            {/* ── Panel info — borde verde bosque ─────── */}
+            {/* ── Panel info — borde verde bosque ─── */}
             <div style={{ borderTop: `3px solid ${FOREST}` }}>
                 <div className="px-4 pt-3.5 pb-4">
 
-                    {/* Nombre */}
+                    {/* Nombre — Bebas Neue, blanco */}
                     <h3
                         className="font-display uppercase leading-tight"
-                        style={{ fontSize: 'clamp(1.25rem, 5vw, 1.55rem)', color: '#0a0a0a' }}
+                        style={{
+                            fontSize: 'clamp(1.35rem, 5vw, 1.65rem)',
+                            color: '#f0f0f0',
+                            letterSpacing: '0.01em',
+                        }}
                     >
                         {product.name}
                     </h3>
 
-                    {/* Descripción */}
+                    {/* Descripción — DM Sans, tenue */}
                     {product.description && (
                         <p
-                            className="text-[13px] leading-snug mt-1 line-clamp-1"
-                            style={{ color: 'rgba(0,0,0,0.45)' }}
+                            className="font-body text-[13px] leading-snug mt-1 line-clamp-1"
+                            style={{ color: 'rgba(255,255,255,0.42)' }}
                         >
                             {product.description}
                         </p>
                     )}
 
-                    {/* ── Sin variantes: precio + botón ──── */}
+                    {/* ── Sin variantes ──────────────── */}
                     {!hasVariants && (
                         <div
                             className="flex items-center justify-between mt-3 pt-3"
-                            style={{ borderTop: '1px solid rgba(45,106,45,0.10)' }}
+                            style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}
                         >
-                            <div className="flex items-baseline gap-1.5">
+                            <div className="flex items-baseline gap-2">
                                 <span
                                     className="font-display leading-none"
-                                    style={{ fontSize: '1.55rem', color: FOREST_DARK, letterSpacing: '-0.01em' }}
+                                    style={{ fontSize: '1.6rem', color: GREEN_BRIGHT, letterSpacing: '-0.01em' }}
                                 >
                                     ${getEffectivePrice(product).toLocaleString('es-AR')}
                                 </span>
                                 {hasDiscount(product) && (
-                                    <span className="text-xs line-through" style={{ color: 'rgba(0,0,0,0.28)' }}>
+                                    <span
+                                        className="font-body text-xs line-through"
+                                        style={{ color: 'rgba(255,255,255,0.28)' }}
+                                    >
                                         ${product.price.toLocaleString('es-AR')}
                                     </span>
                                 )}
@@ -139,10 +195,10 @@ export default function ProductCard({ product, categoryName }) {
                             {isOpen && (
                                 <button
                                     onClick={handleAdd}
-                                    className="add-btn cursor-pointer flex items-center justify-center w-11 h-11 rounded-full text-white active:scale-90"
+                                    className="add-btn cursor-pointer flex items-center justify-center w-11 h-11 rounded-full text-white active:scale-90 shrink-0"
                                     style={{
                                         background: `linear-gradient(135deg, ${FOREST} 0%, ${FOREST_DARK} 100%)`,
-                                        boxShadow: `0 3px 12px rgba(45,106,45,0.38)`,
+                                        boxShadow: `0 4px 14px rgba(45,106,45,0.45)`,
                                     }}
                                     aria-label={`Agregar ${product.name}`}
                                 >
@@ -152,14 +208,14 @@ export default function ProductCard({ product, categoryName }) {
                         </div>
                     )}
 
-                    {/* ── Con variantes ──────────────────── */}
+                    {/* ── Con variantes ──────────────── */}
                     {hasVariants && (
                         <div
                             className="mt-3 pt-3 flex flex-col gap-2.5"
-                            style={{ borderTop: '1px solid rgba(45,106,45,0.10)' }}
+                            style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}
                         >
                             {variants.map((variant, vIdx) => {
-                                const effPrice = getEffectiveVariantPrice(variant);
+                                const effPrice    = getEffectiveVariantPrice(variant);
                                 const vHasDiscount = variantHasDiscount(variant);
                                 return (
                                     <div
@@ -168,33 +224,43 @@ export default function ProductCard({ product, categoryName }) {
                                         style={{ animationDelay: `${vIdx * 50}ms` }}
                                     >
                                         <div className="flex items-center gap-2 min-w-0">
-                                            {/* Dot verde como indicador de variante */}
                                             <span
-                                                className="shrink-0 w-1.5 h-1.5 rounded-full"
-                                                style={{ background: FOREST, opacity: 0.55 }}
+                                                className="shrink-0 rounded-full"
+                                                style={{ width: 6, height: 6, background: FOREST, opacity: 0.7, flexShrink: 0 }}
                                             />
-                                            <span className="text-sm font-medium truncate" style={{ color: '#333333' }}>
+                                            <span
+                                                className="font-body text-sm font-medium truncate"
+                                                style={{ color: 'rgba(255,255,255,0.75)' }}
+                                            >
                                                 {variant.name}
                                             </span>
                                             {vHasDiscount && (
                                                 <span
                                                     className="text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0"
-                                                    style={{ background: 'rgba(245,158,11,0.13)', color: '#a06500', border: '1px solid rgba(245,158,11,0.28)' }}
+                                                    style={{
+                                                        background: 'rgba(245,158,11,0.14)',
+                                                        color: AMBER,
+                                                        border: '1px solid rgba(245,158,11,0.28)',
+                                                    }}
                                                 >
                                                     -{variant.discount}%
                                                 </span>
                                             )}
                                         </div>
+
                                         <div className="flex items-center gap-2.5 shrink-0">
                                             <div className="flex flex-col items-end">
                                                 <span
                                                     className="font-display leading-none"
-                                                    style={{ fontSize: '1.1rem', color: FOREST_DARK }}
+                                                    style={{ fontSize: '1.1rem', color: GREEN_BRIGHT }}
                                                 >
                                                     ${effPrice.toLocaleString('es-AR')}
                                                 </span>
                                                 {vHasDiscount && (
-                                                    <span className="text-[10px] line-through" style={{ color: 'rgba(0,0,0,0.28)' }}>
+                                                    <span
+                                                        className="font-body text-[10px] line-through"
+                                                        style={{ color: 'rgba(255,255,255,0.28)' }}
+                                                    >
                                                         ${variant.price.toLocaleString('es-AR')}
                                                     </span>
                                                 )}
@@ -202,10 +268,10 @@ export default function ProductCard({ product, categoryName }) {
                                             {isOpen && (
                                                 <button
                                                     onClick={(e) => handleAddVariant(e, variant)}
-                                                    className="add-btn cursor-pointer flex items-center justify-center w-8 h-8 rounded-full text-white active:scale-85"
+                                                    className="add-btn cursor-pointer flex items-center justify-center w-8 h-8 rounded-full text-white active:scale-85 shrink-0"
                                                     style={{
                                                         background: `linear-gradient(135deg, ${FOREST} 0%, ${FOREST_DARK} 100%)`,
-                                                        boxShadow: `0 2px 8px rgba(45,106,45,0.35)`,
+                                                        boxShadow: `0 3px 10px rgba(45,106,45,0.42)`,
                                                     }}
                                                     aria-label={`Agregar ${product.name} ${variant.name}`}
                                                 >
@@ -220,6 +286,6 @@ export default function ProductCard({ product, categoryName }) {
                     )}
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 }

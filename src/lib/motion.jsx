@@ -5,7 +5,10 @@ import { motion, useReducedMotion } from 'framer-motion';
 export const PREMIUM_EASE = [0.22, 1, 0.36, 1];
 
 // ── Shared viewport config ─────────────────
-export const VIEWPORT = { once: true, amount: 0.15, margin: '0px 0px -40px 0px' };
+// once:true → anima solo al entrar, no al salir (performance)
+// amount:0.12 → dispara antes para que se vea suave en mobile
+// margin negativo → dispara antes de llegar al borde inferior
+export const VIEWPORT = { once: true, amount: 0.12, margin: '0px 0px -32px 0px' };
 
 // ── Variants ───────────────────────────────
 
@@ -39,7 +42,7 @@ export const slideLeft = {
 export const staggerContainer = {
     hidden: {},
     visible: {
-        transition: { staggerChildren: 0.1 },
+        transition: { staggerChildren: 0.12, delayChildren: 0.05 },
     },
 };
 

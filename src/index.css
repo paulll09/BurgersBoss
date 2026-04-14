@@ -66,6 +66,21 @@ body {
   }
 }
 
+/* ── GPU compositing global ─────────────── */
+/* Solo en elementos que realmente se animan — evita layer explosion */
+.animate-hero-bg,
+.animate-hero-logo-drop,
+.animate-logo-float-idle,
+.animate-logo-halo,
+.animate-hero-bloom,
+.animate-fab-pulse,
+.animate-cart-ring,
+.promo-track {
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
 /* ── Touch optimization ── */
 button, a, [role="button"] {
   touch-action: manipulation;
@@ -269,9 +284,11 @@ button, a, [role="button"] {
 
 /* ── Product card styles ─────────────────── */
 .product-card {
-  box-shadow: 0 2px 20px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06);
-  transition: transform 0.2s ease;
   transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transition: transform 0.18s ease;
+  will-change: transform;
 }
 .product-card:active {
   transform: scale(0.975) translateZ(0);
@@ -430,22 +447,6 @@ button, a, [role="button"] {
   will-change: transform, opacity;
 }
 
-/* ── Scroll-to-top button entrance ──────── */
-@keyframes scroll-top-appear {
-  from { opacity: 0; transform: translateY(16px) scale(0.82); }
-  to   { opacity: 1; transform: translateY(0)    scale(1);    }
-}
-.animate-scroll-top {
-  animation: scroll-top-appear 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* ── Scroll-to-top arrow nudge on hover ──── */
-.scroll-top-arrow {
-  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-button:hover .scroll-top-arrow {
-  transform: translateY(-3px);
-}
 
 /* ── Footer marquee ───────────────────────── */
 @keyframes footer-marquee {
@@ -504,6 +505,33 @@ button:hover .scroll-top-arrow {
   .boss-watermark {
     background-attachment: scroll;
   }
+}
+
+/* ── Cart: botón Agregar Bebida ─────────── */
+@keyframes drink-shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+.cart-add-drink {
+  background-size: 200% auto;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.25s ease;
+}
+.cart-add-drink:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(45,106,45,0.18) 0%,
+    rgba(45,106,45,0.08) 50%,
+    rgba(45,106,45,0.18) 100%
+  ) !important;
+  box-shadow: 0 4px 18px rgba(45,106,45,0.18);
+  transform: translateY(-1px);
+}
+.cart-add-drink .cart-drink-icon {
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.cart-add-drink:hover .cart-drink-icon {
+  transform: rotate(-15deg) scale(1.18);
 }
 
 /* ── Footer Instagram link hover ─────────── */

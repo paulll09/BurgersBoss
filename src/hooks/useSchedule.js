@@ -26,7 +26,8 @@ function toMinutes(timeStr) {
 }
 
 export function computeIsOpen(schedule) {
-    if (!schedule) return true; // sin schedule = siempre abierto (dev/pruebas)
+    if (import.meta.env.VITE_FORCE_OPEN === 'true') return true;
+    if (!schedule) return true;
 
     const now = new Date();
     const todayIndex     = now.getDay();

@@ -3,20 +3,22 @@ import { useCartStore } from '../../store/cartStore';
 import { Minus, Plus, Trash2, ArrowLeft, MessageCircle, User, MapPin, CreditCard, AlignLeft, Wine, Store, Truck, LocateFixed, Image as ImageIcon } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
-/* ── Paleta blanco + verde bosque ─────────────────── */
-const FOREST       = '#2d6a2d';
-const FOREST_DARK  = '#1a4a1a';
-const LABEL_COLOR  = '#555555';
-const SUBTLE_COLOR = 'rgba(0,0,0,0.32)';
-const BORDER_COLOR = 'rgba(0,0,0,0.08)';
-const PAGE_BG      = '#fafaf8';
-const CARD_BG      = '#ffffff';
-const INNER_BG     = '#f5f4f1';
+/* ── Paleta blanco + verde bosque ───────────────── */
+const FOREST        = '#2d6a2d';
+const FOREST_DARK   = '#1a4a1a';
+const PAGE_BG       = '#ffffff';
+const CARD_BG       = '#f8f8f6';
+const AMBER         = '#F59E0B';
+const BORDER_GREEN  = 'rgba(45,106,45,0.22)';
+const BORDER_SOFT   = 'rgba(0,0,0,0.07)';
+const TEXT_MAIN     = '#0a0a0a';
+const TEXT_MUTED    = '#555555';
+const TEXT_DIM      = 'rgba(0,0,0,0.32)';
 
 const inputCls = (err) =>
     `w-full min-w-0 border ${err ? 'border-red-400 ring-1 ring-red-400/20' : 'border-[rgba(0,0,0,0.12)]'} rounded-xl px-4 py-3.5 text-base outline-none transition-colors font-body focus:border-[#2d6a2d]`;
 
-const inputStyle = { background: '#ffffff', color: '#0a0a0a' };
+const inputStyle = { background: '#ffffff', color: TEXT_MAIN };
 
 export default function Cart() {
     const {
@@ -30,9 +32,9 @@ export default function Cart() {
     const hasDrinks = items.some(item => item.category_name?.toLowerCase().includes('bebida'));
     const handleAddDrink = () => navigate('/', { state: { scrollTo: 'bebida' } });
 
-    const [formErrors, setFormErrors] = useState({});
+    const [formErrors, setFormErrors]   = useState({});
     const [geoLocation, setGeoLocation] = useState(null);
-    const [geoStatus, setGeoStatus] = useState('idle');
+    const [geoStatus, setGeoStatus]     = useState('idle');
 
     const handleGetLocation = () => {
         if (!navigator.geolocation) { setGeoStatus('error'); return; }
@@ -87,15 +89,19 @@ export default function Cart() {
     const PageHeader = ({ showClear }) => (
         <div
             className="relative w-full overflow-hidden"
-            style={{ background: CARD_BG, borderBottom: `1px solid ${BORDER_COLOR}` }}
+            style={{ background: PAGE_BG, borderBottom: `1px solid ${BORDER_SOFT}` }}
         >
+            {/* Flecha volver — verde bosque con ícono ámbar */}
             <Link
                 to="/"
                 className="absolute top-5 left-5 z-10 flex items-center justify-center w-10 h-10 rounded-full transition-all group"
-                style={{ background: 'rgba(45,106,45,0.09)', border: `1.5px solid rgba(45,106,45,0.22)` }}
+                style={{ background: 'rgba(45,106,45,0.09)', border: `1.5px solid ${BORDER_GREEN}` }}
                 aria-label="Volver al menú"
             >
-                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-all" style={{ color: FOREST }} />
+                <ArrowLeft
+                    className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform"
+                    style={{ color: AMBER }}
+                />
             </Link>
 
             {showClear && (
@@ -113,7 +119,7 @@ export default function Cart() {
                 <div aria-label="Tu Pedido">
                     <span
                         className="block font-display uppercase select-none"
-                        style={{ fontSize: 'clamp(3.2rem, 15vw, 7rem)', color: '#0a0a0a', letterSpacing: '-0.02em', lineHeight: 0.86 }}
+                        style={{ fontSize: 'clamp(3.2rem, 15vw, 7rem)', color: TEXT_MAIN, letterSpacing: '-0.02em', lineHeight: 0.86 }}
                     >
                         TU
                     </span>
@@ -127,7 +133,7 @@ export default function Cart() {
                 <div className="flex items-center gap-3 mt-5">
                     <div style={{ height: '3px', width: '36px', background: FOREST, borderRadius: '2px', flexShrink: 0 }} />
                     {showClear && (
-                        <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: LABEL_COLOR }}>
+                        <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: TEXT_MUTED }}>
                             {items.length} {items.length === 1 ? 'producto' : 'productos'}
                         </span>
                     )}
@@ -144,18 +150,18 @@ export default function Cart() {
                 <div className="flex flex-col items-center justify-center py-20 px-4">
                     <div
                         className="w-20 h-20 rounded-full flex items-center justify-center mb-7"
-                        style={{ background: 'rgba(45,106,45,0.09)', border: `1.5px solid rgba(45,106,45,0.18)` }}
+                        style={{ background: 'rgba(45,106,45,0.08)', border: `1.5px solid ${BORDER_GREEN}` }}
                     >
                         <Trash2 className="w-8 h-8" style={{ color: FOREST }} />
                     </div>
-                    <h2 className="font-display text-4xl uppercase mb-2" style={{ color: '#0a0a0a' }}>Carrito vacío</h2>
-                    <p className="text-sm text-center mb-9 max-w-xs leading-relaxed" style={{ color: LABEL_COLOR }}>
+                    <h2 className="font-display text-4xl uppercase mb-2" style={{ color: TEXT_MAIN }}>Carrito vacío</h2>
+                    <p className="font-body text-sm text-center mb-9 max-w-xs leading-relaxed" style={{ color: TEXT_MUTED }}>
                         Todavía no sumaste nada. Explorá el menú para armar tu pedido.
                     </p>
                     <Link
                         to="/"
                         className="flex items-center gap-2 px-7 py-3.5 rounded-full text-sm font-semibold uppercase tracking-widest transition-all hover:opacity-90 active:scale-95 group"
-                        style={{ background: FOREST, color: '#ffffff', boxShadow: '0 4px 20px rgba(45,106,45,0.30)' }}
+                        style={{ background: FOREST, color: '#ffffff', boxShadow: '0 4px 20px rgba(45,106,45,0.28)' }}
                     >
                         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
                         Ver el menú
@@ -172,7 +178,7 @@ export default function Cart() {
 
             <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
 
-                {/* Items */}
+                {/* Items del carrito */}
                 <div className="space-y-2.5 mb-7">
                     {items.map((item, i) => {
                         const key = item.cartKey || item.id;
@@ -182,38 +188,39 @@ export default function Cart() {
                                 className="animate-fade-up flex items-center gap-3 p-3 rounded-2xl"
                                 style={{
                                     animationDelay: `${i * 55}ms`,
-                                    background: CARD_BG,
-                                    border: `1px solid ${BORDER_COLOR}`,
-                                    boxShadow: '0 1px 8px rgba(0,0,0,0.05)',
+                                    background: '#f7f3ee',
+                                    border: `1px solid ${BORDER_GREEN}`,
+                                    boxShadow: '0 1px 6px rgba(45,106,45,0.06)',
                                 }}
                             >
                                 <div
                                     className="w-16 h-16 rounded-xl overflow-hidden shrink-0 flex items-center justify-center"
-                                    style={{ background: '#f0efed' }}
+                                    style={{ background: '#f0f0ed' }}
                                 >
                                     {item.image_url
                                         ? <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
-                                        : <ImageIcon className="w-5 h-5" style={{ color: 'rgba(0,0,0,0.22)' }} />
+                                        : <ImageIcon className="w-5 h-5" style={{ color: TEXT_DIM }} />
                                     }
                                 </div>
                                 <div className="flex-grow min-w-0">
-                                    <p className="font-display text-lg uppercase leading-tight" style={{ color: '#0a0a0a' }}>
+                                    <p className="font-display text-lg uppercase leading-tight" style={{ color: TEXT_MAIN }}>
                                         {item.name}{item.variantName ? ` — ${item.variantName}` : ''}
                                     </p>
                                     <div className="flex items-center gap-1.5">
-                                        <span className="text-sm font-semibold" style={{ color: '#F59E0B' }}>
+                                        <span className="font-body text-sm font-semibold" style={{ color: FOREST }}>
                                             ${item.price.toLocaleString('es-AR')}
                                         </span>
                                         {item.originalPrice && item.originalPrice !== item.price && (
-                                            <span className="text-xs line-through" style={{ color: SUBTLE_COLOR }}>
+                                            <span className="font-body text-xs line-through" style={{ color: TEXT_DIM }}>
                                                 ${item.originalPrice.toLocaleString('es-AR')}
                                             </span>
                                         )}
                                     </div>
                                 </div>
+                                {/* Controles cantidad */}
                                 <div
                                     className="flex items-center gap-1 rounded-full p-0.5 shrink-0"
-                                    style={{ background: INNER_BG, border: `1px solid ${BORDER_COLOR}` }}
+                                    style={{ background: '#f4f4f2', border: `1px solid ${BORDER_GREEN}` }}
                                 >
                                     <button
                                         onClick={() => updateQuantity(key, item.quantity - 1)}
@@ -223,7 +230,7 @@ export default function Cart() {
                                     >
                                         <Minus className="w-3.5 h-3.5" />
                                     </button>
-                                    <span className="w-6 text-center font-bold text-sm" style={{ color: '#0a0a0a' }}>{item.quantity}</span>
+                                    <span className="w-6 text-center font-bold text-sm" style={{ color: TEXT_MAIN }}>{item.quantity}</span>
                                     <button
                                         onClick={() => updateQuantity(key, item.quantity + 1)}
                                         aria-label={`Aumentar cantidad de ${item.name}`}
@@ -237,7 +244,7 @@ export default function Cart() {
                                     onClick={() => removeItem(key)}
                                     aria-label={`Eliminar ${item.name}`}
                                     className="cursor-pointer w-9 h-9 flex items-center justify-center rounded-full transition-all shrink-0 hover:bg-red-50"
-                                    style={{ color: 'rgba(0,0,0,0.28)' }}
+                                    style={{ color: TEXT_DIM }}
                                 >
                                     <Trash2 className="w-4 h-4" />
                                 </button>
@@ -250,14 +257,14 @@ export default function Cart() {
                 {!hasDrinks && (
                     <button
                         onClick={handleAddDrink}
-                        className="cursor-pointer w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl mb-7 font-semibold text-sm uppercase tracking-widest transition-all active:scale-95 hover:opacity-90"
+                        className="cart-add-drink cursor-pointer w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl mb-7 font-semibold text-sm uppercase tracking-widest active:scale-95"
                         style={{
-                            background: INNER_BG,
-                            color: LABEL_COLOR,
-                            border: `1px solid ${BORDER_COLOR}`,
+                            background: 'linear-gradient(135deg, rgba(45,106,45,0.10) 0%, rgba(45,106,45,0.04) 100%)',
+                            color: FOREST,
+                            border: `1.5px solid ${BORDER_GREEN}`,
                         }}
                     >
-                        <Wine className="w-4 h-4" style={{ color: '#9c67c7' }} />
+                        <Wine className="w-4 h-4 cart-drink-icon" style={{ color: FOREST }} />
                         Agregar Bebida
                     </button>
                 )}
@@ -267,20 +274,20 @@ export default function Cart() {
                     className="rounded-2xl p-5 sm:p-7 mb-4 animate-fade-up"
                     style={{
                         animationDelay: `${items.length * 55 + 70}ms`,
-                        background: CARD_BG,
-                        border: `1px solid ${BORDER_COLOR}`,
-                        boxShadow: '0 1px 8px rgba(0,0,0,0.05)',
+                        background: '#ffffff',
+                        border: `1px solid ${BORDER_GREEN}`,
+                        boxShadow: '0 1px 6px rgba(45,106,45,0.06)',
                     }}
                 >
                     <h3
                         className="font-display text-2xl uppercase mb-5 pb-4"
-                        style={{ color: '#0a0a0a', borderBottom: `1px solid ${BORDER_COLOR}` }}
+                        style={{ color: TEXT_MAIN, borderBottom: `1px solid ${BORDER_SOFT}` }}
                     >
                         ¿Cómo recibís tu pedido?
                     </h3>
                     <div className="grid grid-cols-2 gap-3">
                         {[
-                            { id: 'pickup', label: 'Retirar del local', Icon: Store },
+                            { id: 'pickup',   label: 'Retirar del local',  Icon: Store },
                             { id: 'delivery', label: 'Envío a domicilio', Icon: Truck },
                         ].map(({ id, label, Icon }) => (
                             <button
@@ -292,7 +299,7 @@ export default function Cart() {
                                 className="cursor-pointer flex flex-col items-center gap-2.5 py-5 rounded-2xl transition-all duration-200 active:scale-95"
                                 style={orderType === id
                                     ? { border: `2px solid ${FOREST}`, background: 'rgba(45,106,45,0.07)', color: FOREST }
-                                    : { border: `2px solid rgba(0,0,0,0.10)`, background: INNER_BG, color: LABEL_COLOR }
+                                    : { border: `2px solid rgba(0,0,0,0.09)`, background: CARD_BG, color: TEXT_MUTED }
                                 }
                             >
                                 <Icon className="w-6 h-6" />
@@ -307,14 +314,14 @@ export default function Cart() {
                     <div
                         className="rounded-2xl p-5 sm:p-7 mb-4 animate-fade-in"
                         style={{
-                            background: CARD_BG,
-                            border: `1px solid ${BORDER_COLOR}`,
-                            boxShadow: '0 1px 8px rgba(0,0,0,0.05)',
+                            background: '#ffffff',
+                            border: `1px solid ${BORDER_GREEN}`,
+                            boxShadow: '0 1px 6px rgba(45,106,45,0.06)',
                         }}
                     >
                         <h3
                             className="font-display text-2xl uppercase mb-5 pb-4"
-                            style={{ color: '#0a0a0a', borderBottom: `1px solid ${BORDER_COLOR}` }}
+                            style={{ color: TEXT_MAIN, borderBottom: `1px solid ${BORDER_SOFT}` }}
                         >
                             Tus datos
                         </h3>
@@ -322,7 +329,7 @@ export default function Cart() {
                         <div className="space-y-4 mb-6">
                             {/* Nombre */}
                             <div>
-                                <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: LABEL_COLOR }}>
+                                <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: TEXT_MUTED }}>
                                     <User className="w-3.5 h-3.5" style={{ color: FOREST }} />
                                     Nombre <span style={{ color: FOREST }}>*</span>
                                 </label>
@@ -334,11 +341,11 @@ export default function Cart() {
                                 />
                             </div>
 
-                            {/* Dirección + geolocalización */}
+                            {/* Dirección */}
                             {orderType === 'delivery' && (
                                 <div className="flex flex-col gap-2.5 animate-fade-in">
                                     <div>
-                                        <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: LABEL_COLOR }}>
+                                        <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: TEXT_MUTED }}>
                                             <MapPin className="w-3.5 h-3.5" style={{ color: FOREST }} />
                                             Dirección <span style={{ color: FOREST }}>*</span>
                                         </label>
@@ -356,24 +363,24 @@ export default function Cart() {
                                         className="cursor-pointer flex items-center justify-center gap-2 w-full py-3 rounded-xl text-xs font-semibold uppercase tracking-widest transition-all border"
                                         style={
                                             geoStatus === 'granted'
-                                                ? { borderColor: 'rgba(45,106,45,0.35)', background: 'rgba(45,106,45,0.08)', color: FOREST }
+                                                ? { borderColor: 'rgba(45,106,45,0.35)', background: 'rgba(45,106,45,0.07)', color: FOREST }
                                                 : geoStatus === 'error'
-                                                ? { borderColor: 'rgba(192,57,43,0.25)', background: 'rgba(192,57,43,0.05)', color: '#c0392b' }
-                                                : { borderColor: BORDER_COLOR, background: INNER_BG, color: LABEL_COLOR }
+                                                ? { borderColor: 'rgba(239,68,68,0.30)', background: 'rgba(239,68,68,0.05)', color: '#dc2626' }
+                                                : { borderColor: BORDER_GREEN, background: CARD_BG, color: TEXT_MUTED }
                                         }
                                     >
                                         <LocateFixed className="w-3.5 h-3.5" />
-                                        {geoStatus === 'loading' ? 'Obteniendo ubicación…'
-                                            : geoStatus === 'granted' ? 'Ubicación obtenida ✓'
-                                            : geoStatus === 'error' ? 'No se pudo obtener la ubicación'
-                                            : 'Compartir mi ubicación actual'}
+                                        {geoStatus === 'loading'  ? 'Obteniendo ubicación…'
+                                         : geoStatus === 'granted' ? 'Ubicación obtenida ✓'
+                                         : geoStatus === 'error'   ? 'No se pudo obtener la ubicación'
+                                         : 'Compartir mi ubicación actual'}
                                     </button>
                                 </div>
                             )}
 
                             {/* Medio de pago */}
                             <div>
-                                <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: LABEL_COLOR }}>
+                                <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: TEXT_MUTED }}>
                                     <CreditCard className="w-3.5 h-3.5" style={{ color: FOREST }} />
                                     Medio de Pago
                                 </label>
@@ -384,7 +391,7 @@ export default function Cart() {
                                             className="cursor-pointer rounded-xl py-3 px-2 text-center transition-all text-[11px] font-semibold uppercase tracking-wide"
                                             style={checkoutForm.paymentMethod === m
                                                 ? { background: FOREST, color: '#ffffff', boxShadow: `0 3px 12px rgba(45,106,45,0.30)` }
-                                                : { background: INNER_BG, color: LABEL_COLOR, border: `1px solid rgba(0,0,0,0.09)` }
+                                                : { background: CARD_BG, color: TEXT_MUTED, border: `1px solid rgba(0,0,0,0.09)` }
                                             }
                                         >
                                             <input type="radio" name="paymentMethod" value={m} checked={checkoutForm.paymentMethod === m} onChange={handleChange} className="hidden" />
@@ -396,10 +403,10 @@ export default function Cart() {
 
                             {/* Aclaraciones */}
                             <div>
-                                <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: LABEL_COLOR }}>
+                                <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: TEXT_MUTED }}>
                                     <AlignLeft className="w-3.5 h-3.5" style={{ color: FOREST }} />
                                     Aclaraciones
-                                    <span className="normal-case tracking-normal font-normal ml-1" style={{ color: SUBTLE_COLOR }}>(opcional)</span>
+                                    <span className="normal-case tracking-normal font-normal ml-1" style={{ color: TEXT_DIM }}>(opcional)</span>
                                 </label>
                                 <textarea
                                     name="notes" value={checkoutForm.notes} onChange={handleChange}
@@ -410,13 +417,13 @@ export default function Cart() {
                             </div>
                         </div>
 
-                        {/* Total + botón — desktop */}
-                        <div className="hidden sm:block pt-5" style={{ borderTop: `1px solid ${BORDER_COLOR}` }}>
+                        {/* Total + CTA — desktop */}
+                        <div className="hidden sm:block pt-5" style={{ borderTop: `1px solid ${BORDER_SOFT}` }}>
                             <div className="flex justify-between items-end mb-5">
-                                <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: LABEL_COLOR }}>Total</span>
+                                <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: TEXT_MUTED }}>Total</span>
                                 <div className="flex items-baseline gap-1">
-                                    <span className="text-sm font-semibold" style={{ color: '#F59E0B' }}>$</span>
-                                    <span className="font-display font-bold text-4xl leading-none" style={{ color: '#0a0a0a' }}>
+                                    <span className="font-body text-sm font-semibold" style={{ color: AMBER }}>$</span>
+                                    <span className="font-display font-bold text-4xl leading-none" style={{ color: TEXT_MAIN }}>
                                         {totalPrice.toLocaleString('es-AR')}
                                     </span>
                                 </div>
@@ -432,46 +439,46 @@ export default function Cart() {
                                 <MessageCircle className="w-[18px] h-[18px]" />
                                 Pedir por WhatsApp
                             </button>
-                            <p className="text-xs text-center mt-4" style={{ color: SUBTLE_COLOR }}>
+                            <p className="font-body text-xs text-center mt-4" style={{ color: TEXT_DIM }}>
                                 Serás redirigido a WhatsApp para confirmar tu pedido.
                             </p>
                             {orderType === 'delivery' && (
-                                <p className="text-[11px] text-center mt-1" style={{ color: SUBTLE_COLOR }}>
+                                <p className="font-body text-[11px] text-center mt-1" style={{ color: TEXT_DIM }}>
                                     * El costo de envío se acuerda aparte.
                                 </p>
                             )}
                         </div>
 
                         {(formErrors.name || formErrors.address) && (
-                            <div className="sm:hidden pt-4" style={{ borderTop: `1px solid ${BORDER_COLOR}` }}>
+                            <div className="sm:hidden pt-4" style={{ borderTop: `1px solid ${BORDER_SOFT}` }}>
                                 <p className="text-red-500 text-xs font-semibold text-center">Completá los campos requeridos (*)</p>
                             </div>
                         )}
                     </div>
                 )}
 
-                {/* Sticky bottom bar — mobile */}
+                {/* Sticky bar mobile */}
                 {orderType && (
                     <div
                         className="sm:hidden fixed bottom-0 left-0 right-0 z-[100] px-4 py-3"
                         style={{
-                            background: CARD_BG,
-                            borderTop: `1px solid ${BORDER_COLOR}`,
-                            boxShadow: '0 -4px 24px rgba(0,0,0,0.10)',
+                            background: '#ffffff',
+                            borderTop: `1px solid ${BORDER_GREEN}`,
+                            boxShadow: '0 -4px 20px rgba(0,0,0,0.08)',
                             paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
                         }}
                     >
                         <div className="flex items-center gap-3">
                             <div>
-                                <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: LABEL_COLOR }}>Total</p>
+                                <p className="font-body text-[10px] font-semibold uppercase tracking-widest" style={{ color: TEXT_MUTED }}>Total</p>
                                 <div className="flex items-baseline gap-0.5">
-                                    <span className="text-xs font-semibold" style={{ color: '#F59E0B' }}>$</span>
-                                    <span className="font-display font-bold text-2xl leading-none" style={{ color: '#0a0a0a' }}>
+                                    <span className="font-body text-xs font-semibold" style={{ color: AMBER }}>$</span>
+                                    <span className="font-display font-bold text-2xl leading-none" style={{ color: TEXT_MAIN }}>
                                         {totalPrice.toLocaleString('es-AR')}
                                     </span>
                                 </div>
                                 {orderType === 'delivery' && (
-                                    <p className="text-[10px] mt-0.5" style={{ color: SUBTLE_COLOR }}>* Envío aparte</p>
+                                    <p className="font-body text-[10px] mt-0.5" style={{ color: TEXT_DIM }}>* Envío aparte</p>
                                 )}
                             </div>
                             <button
