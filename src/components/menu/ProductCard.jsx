@@ -7,13 +7,12 @@ import { BarCtx } from '../../context/barCtx';
 import { getEffectivePrice, hasDiscount, getEffectiveVariantPrice, variantHasDiscount } from '../../utils/price';
 import { PREMIUM_EASE, VIEWPORT } from '../../lib/motion';
 
-/* ── Paleta cinematográfica ─────────────────── */
+/* ── Paleta limpia ──────────────────────────── */
 const FOREST       = '#2d6a2d';
 const FOREST_DARK  = '#1a4a1a';
-const GREEN_BRIGHT = '#86efac';   /* precio — alta legibilidad sobre oscuro */
-const AMBER        = '#F59E0B';   /* solo badges de descuento */
-const CARD_BG      = '#111111';
-const CARD_SURFACE = '#181818';
+const AMBER        = '#F59E0B';   /* solo badges descuento */
+const CARD_BG      = '#ffffff';
+const CARD_SURFACE = '#f0efed';
 
 /* ── Variantes — solo transform + opacity (GPU) ── */
 const cardVariants = {
@@ -60,7 +59,8 @@ export default function ProductCard({ product, categoryName }) {
             className="overflow-hidden rounded-3xl"
             style={{
                 background: CARD_BG,
-                boxShadow: '0 8px 32px rgba(0,0,0,0.22), 0 2px 8px rgba(0,0,0,0.14)',
+                border: '1px solid rgba(45,106,45,0.12)',
+                boxShadow: '0 10px 40px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.08)',
                 transform: 'translateZ(0)',
                 backfaceVisibility: 'hidden',
                 WebkitBackfaceVisibility: 'hidden',
@@ -82,7 +82,7 @@ export default function ProductCard({ product, categoryName }) {
                             <div
                                 className="absolute inset-0"
                                 style={{
-                                    background: 'linear-gradient(110deg, #181818 30%, #222 50%, #181818 70%)',
+                                    background: 'linear-gradient(110deg, #ece9e4 30%, #f5f3ef 50%, #ece9e4 70%)',
                                     backgroundSize: '200% 100%',
                                     animation: 'shimmer 1.6s ease-in-out infinite',
                                 }}
@@ -119,7 +119,7 @@ export default function ProductCard({ product, categoryName }) {
                 ) : (
                     <div
                         className="w-full h-full flex items-center justify-center"
-                        style={{ color: 'rgba(255,255,255,0.12)' }}
+                        style={{ color: 'rgba(0,0,0,0.18)' }}
                     >
                         <ImageIcon className="w-12 h-12" />
                     </div>
@@ -153,7 +153,7 @@ export default function ProductCard({ product, categoryName }) {
                         className="font-display uppercase leading-tight"
                         style={{
                             fontSize: 'clamp(1.35rem, 5vw, 1.65rem)',
-                            color: '#f0f0f0',
+                            color: '#111111',
                             letterSpacing: '0.01em',
                         }}
                     >
@@ -164,7 +164,7 @@ export default function ProductCard({ product, categoryName }) {
                     {product.description && (
                         <p
                             className="font-body text-[13px] leading-snug mt-1 line-clamp-1"
-                            style={{ color: 'rgba(255,255,255,0.42)' }}
+                            style={{ color: '#666666' }}
                         >
                             {product.description}
                         </p>
@@ -174,19 +174,19 @@ export default function ProductCard({ product, categoryName }) {
                     {!hasVariants && (
                         <div
                             className="flex items-center justify-between mt-3 pt-3"
-                            style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}
+                            style={{ borderTop: '1px solid rgba(0,0,0,0.08)' }}
                         >
                             <div className="flex items-baseline gap-2">
                                 <span
                                     className="font-display leading-none"
-                                    style={{ fontSize: '1.6rem', color: GREEN_BRIGHT, letterSpacing: '-0.01em' }}
+                                    style={{ fontSize: '1.6rem', color: '#111111', letterSpacing: '-0.01em' }}
                                 >
                                     ${getEffectivePrice(product).toLocaleString('es-AR')}
                                 </span>
                                 {hasDiscount(product) && (
                                     <span
                                         className="font-body text-xs line-through"
-                                        style={{ color: 'rgba(255,255,255,0.28)' }}
+                                        style={{ color: 'rgba(0,0,0,0.28)' }}
                                     >
                                         ${product.price.toLocaleString('es-AR')}
                                     </span>
@@ -197,8 +197,9 @@ export default function ProductCard({ product, categoryName }) {
                                     onClick={handleAdd}
                                     className="add-btn cursor-pointer flex items-center justify-center w-11 h-11 rounded-full text-white active:scale-90 shrink-0"
                                     style={{
-                                        background: `linear-gradient(135deg, ${FOREST} 0%, ${FOREST_DARK} 100%)`,
-                                        boxShadow: `0 4px 14px rgba(45,106,45,0.45)`,
+                                        background: FOREST,
+                                        boxShadow: `0 4px 14px rgba(45,106,45,0.35)`,
+                                        color: '#ffffff',
                                     }}
                                     aria-label={`Agregar ${product.name}`}
                                 >
@@ -212,7 +213,7 @@ export default function ProductCard({ product, categoryName }) {
                     {hasVariants && (
                         <div
                             className="mt-3 pt-3 flex flex-col gap-2.5"
-                            style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}
+                            style={{ borderTop: '1px solid rgba(0,0,0,0.08)' }}
                         >
                             {variants.map((variant, vIdx) => {
                                 const effPrice    = getEffectiveVariantPrice(variant);
@@ -226,11 +227,11 @@ export default function ProductCard({ product, categoryName }) {
                                         <div className="flex items-center gap-2 min-w-0">
                                             <span
                                                 className="shrink-0 rounded-full"
-                                                style={{ width: 6, height: 6, background: FOREST, opacity: 0.7, flexShrink: 0 }}
+                                                style={{ width: 6, height: 6, background: FOREST, opacity: 0.5, flexShrink: 0 }}
                                             />
                                             <span
                                                 className="font-body text-sm font-medium truncate"
-                                                style={{ color: 'rgba(255,255,255,0.75)' }}
+                                                style={{ color: '#333333' }}
                                             >
                                                 {variant.name}
                                             </span>
@@ -252,14 +253,14 @@ export default function ProductCard({ product, categoryName }) {
                                             <div className="flex flex-col items-end">
                                                 <span
                                                     className="font-display leading-none"
-                                                    style={{ fontSize: '1.1rem', color: GREEN_BRIGHT }}
+                                                    style={{ fontSize: '1.1rem', color: '#111111' }}
                                                 >
                                                     ${effPrice.toLocaleString('es-AR')}
                                                 </span>
                                                 {vHasDiscount && (
                                                     <span
                                                         className="font-body text-[10px] line-through"
-                                                        style={{ color: 'rgba(255,255,255,0.28)' }}
+                                                        style={{ color: 'rgba(0,0,0,0.28)' }}
                                                     >
                                                         ${variant.price.toLocaleString('es-AR')}
                                                     </span>
@@ -270,8 +271,9 @@ export default function ProductCard({ product, categoryName }) {
                                                     onClick={(e) => handleAddVariant(e, variant)}
                                                     className="add-btn cursor-pointer flex items-center justify-center w-8 h-8 rounded-full text-white active:scale-85 shrink-0"
                                                     style={{
-                                                        background: `linear-gradient(135deg, ${FOREST} 0%, ${FOREST_DARK} 100%)`,
-                                                        boxShadow: `0 3px 10px rgba(45,106,45,0.42)`,
+                                                        background: FOREST,
+                                                        boxShadow: `0 3px 10px rgba(45,106,45,0.35)`,
+                                                        color: '#ffffff',
                                                     }}
                                                     aria-label={`Agregar ${product.name} ${variant.name}`}
                                                 >

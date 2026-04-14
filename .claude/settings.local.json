@@ -21,7 +21,9 @@
       "Bash(node -e \"const icons = require\\('c:/Users/aquin/burgers-boss/node_modules/lucide-react'\\); const names = Object.keys\\(icons\\).filter\\(n => /bike|moto|scooter|cycle|motor|wheel|delivery|dispatch|courier/i.test\\(n\\)\\); console.log\\(names\\);\")",
       "Bash(gh repo:*)",
       "WebFetch(domain:github.com)",
-      "Bash(claude plugin:*)"
+      "Bash(claude plugin:*)",
+      "WebFetch(domain:bulgariabarbcn.com)",
+      "WebFetch(domain:bulgariabarbcn.vercel.app)"
     ]
   }
 }

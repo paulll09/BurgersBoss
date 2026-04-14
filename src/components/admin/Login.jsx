@@ -2,6 +2,10 @@ import { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { Lock } from 'lucide-react';
+
+const G = '#2d6a2d';
+const G_DARK = '#1a4a1a';
 
 const ERROR_MAP = {
     'Invalid login credentials': 'Contraseña incorrecta.',
@@ -26,7 +30,6 @@ export default function Login() {
     const handleLogin = async (e) => {
         e.preventDefault();
         setLoading(true);
-
         const email = import.meta.env.VITE_ADMIN_EMAIL;
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) {
@@ -39,27 +42,56 @@ export default function Login() {
     };
 
     return (
-        <div className="min-h-[75vh] flex items-center justify-center">
-            <div className="border border-border p-8 rounded-3xl w-full max-w-md shadow-[0_8px_40px_rgba(0,0,0,0.06)] bg-background">
-                <h2 className="font-display text-4xl font-black text-center text-primary mb-2 uppercase tracking-wider">Panel Admin</h2>
-                <p className="font-body italic text-center text-text-muted mb-8 text-sm">Ingresá tu contraseña para gestionar el menú</p>
-                <form onSubmit={handleLogin} className="space-y-6">
+        <div className="min-h-[80vh] flex items-center justify-center px-4">
+            <div
+                className="w-full max-w-sm rounded-3xl p-8"
+                style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 4px 32px rgba(0,0,0,0.06)' }}
+            >
+                {/* Logo / Marca */}
+                <div className="text-center mb-8">
+                    <div
+                        className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                        style={{ background: 'rgba(45,106,45,0.09)' }}
+                    >
+                        <Lock className="w-6 h-6" style={{ color: G }} />
+                    </div>
+                    <h2 className="font-display uppercase text-3xl leading-none" style={{ color: '#111' }}>
+                        Panel <span style={{ color: G }}>Admin</span>
+                    </h2>
+                    <p className="font-body text-sm mt-1.5" style={{ color: 'rgba(0,0,0,0.45)' }}>
+                        Burgers Boss · Gestión del menú
+                    </p>
+                </div>
+
+                <form onSubmit={handleLogin} className="flex flex-col gap-4">
                     <div>
-                        <label className="block text-sm font-body font-medium text-text-muted mb-2">Contraseña</label>
+                        <label className="font-body text-[11px] font-semibold uppercase tracking-widest mb-2 block" style={{ color: 'rgba(0,0,0,0.45)' }}>
+                            Contraseña
+                        </label>
                         <input
                             type="password"
                             required
                             autoFocus
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full bg-surface-light border border-border rounded-xl px-4 py-3 text-secondary font-body focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-text-light"
                             placeholder="••••••••"
+                            className="w-full rounded-xl px-4 py-3.5 text-base font-body outline-none transition-all"
+                            style={{
+                                background: '#f7f7f5',
+                                border: '1px solid rgba(0,0,0,0.10)',
+                                color: '#111',
+                                '--tw-ring-color': 'rgba(45,106,45,0.15)',
+                            }}
+                            onFocus={e => e.target.style.borderColor = G}
+                            onBlur={e => e.target.style.borderColor = 'rgba(0,0,0,0.10)'}
                         />
                     </div>
+
                     <button
                         type="submit"
                         disabled={loading}
-                        className="cursor-pointer w-full bg-primary hover:bg-primary-dark text-white font-display font-bold py-3.5 rounded-xl uppercase tracking-[0.12em] transition-all active:scale-[0.98] disabled:opacity-50 mt-4 shadow-[0_4px_16px_rgba(204,0,0,0.2)]"
+                        className="cursor-pointer w-full py-3.5 rounded-xl font-body font-bold text-sm uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-50 mt-1"
+                        style={{ background: G, color: '#fff', boxShadow: '0 4px 16px rgba(45,106,45,0.28)' }}
                     >
                         {loading ? 'Ingresando...' : 'Acceder'}
                     </button>

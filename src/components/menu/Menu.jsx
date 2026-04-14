@@ -138,14 +138,14 @@ export default function Menu({ products, categories: rawCategories, loading, err
     }, [activeCategory]);
 
     return (
-        <div id="menu" className="relative pb-20" style={{ background: '#ffffff' }}>
+        <div id="menu" className="relative pb-20" style={{ background: '#F5F0E8' }}>
 
             {/* ── Category Tabs ──────────────────────── */}
             <div
                 className="sticky z-40 border-b"
                 style={{
                     top: 0,
-                    background: '#ffffff',
+                    background: '#F5F0E8',
                     borderColor: 'rgba(0,0,0,0.08)',
                     boxShadow: '0 1px 0 rgba(0,0,0,0.06)',
                 }}
@@ -183,7 +183,7 @@ export default function Menu({ products, categories: rawCategories, loading, err
                                 className="cursor-pointer relative z-10 shrink-0 px-3 py-1.5 rounded-full text-[10px] font-semibold uppercase tracking-wider transition-colors duration-300 active:scale-95"
                                 style={active
                                     ? { color: '#ffffff' }
-                                    : { color: 'rgba(0,0,0,0.50)', boxShadow: '0 0 0 1px rgba(0,0,0,0.10)', background: 'rgba(0,0,0,0.03)' }
+                                    : { color: 'rgba(0,0,0,0.50)', boxShadow: '0 0 0 1px rgba(0,0,0,0.10)', background: 'rgba(0,0,0,0.04)' }
                                 }
                             >
                                 {cat.name}
@@ -199,7 +199,7 @@ export default function Menu({ products, categories: rawCategories, loading, err
                     <div className="flex flex-col gap-4">
                         {[...Array(4)].map((_, i) => (
                             <div key={i} className="rounded-2xl animate-pulse h-28"
-                                style={{ background: '#f0efed' }} />
+                                style={{ background: '#E8E2D8' }} />
                         ))}
                     </div>
                 ) : error ? (

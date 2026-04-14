@@ -318,7 +318,7 @@ export default function AdminProducts() {
             const max = Math.max(...prices);
             return (
                 <div>
-                    <span className="font-bold text-primary text-sm">
+                    <span className="font-bold text-sm" style={{ color: '#2d6a2d' }}>
                         ${min.toLocaleString('es-AR')}{min !== max ? ` - $${max.toLocaleString('es-AR')}` : ''}
                     </span>
                     <span className="text-text-dim text-[10px] ml-1.5">{variants.length} var.</span>
@@ -328,13 +328,13 @@ export default function AdminProducts() {
         if (product.discount > 0) {
             return (
                 <div>
-                    <span className="font-bold text-primary text-sm">${Math.round(product.price * (1 - product.discount / 100)).toLocaleString('es-AR')}</span>
+                    <span className="font-bold text-sm" style={{ color: '#2d6a2d' }}>${Math.round(product.price * (1 - product.discount / 100)).toLocaleString('es-AR')}</span>
                     <span className="text-text-dim text-xs line-through ml-1.5">${Number(product.price).toLocaleString('es-AR')}</span>
                     <span className="text-[10px] font-bold text-primary ml-1">-{product.discount}%</span>
                 </div>
             );
         }
-        return <span className="font-bold text-primary text-sm">${Number(product.price).toLocaleString('es-AR')}</span>;
+        return <span className="font-bold text-sm" style={{ color: '#2d6a2d' }}>${Number(product.price).toLocaleString('es-AR')}</span>;
     };
 
     return (
@@ -358,7 +358,7 @@ export default function AdminProducts() {
                 </div>
                 <button
                     onClick={openCreate}
-                    className="cursor-pointer flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-4 py-2.5 rounded-xl font-bold text-sm uppercase tracking-widest transition-all active:scale-95 shadow-[0_4px_14px_rgba(217,0,9,0.25)] shrink-0"
+                    className="cursor-pointer flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-4 py-2.5 rounded-xl font-bold text-sm uppercase tracking-widest transition-all active:scale-95 shadow-[0_4px_14px_rgba(45,106,45,0.30)] shrink-0"
                 >
                     <Plus className="w-4 h-4" />
                     <span className="hidden sm:inline">Nuevo Producto</span>
@@ -429,13 +429,18 @@ export default function AdminProducts() {
                                 <div className="flex items-center gap-1 shrink-0">
                                     <button
                                         onClick={() => handleToggleVisible(product)}
-                                        className={`p-2.5 rounded-xl transition-all active:scale-90 ${product.visible ? 'text-green-500 bg-green-500/10' : 'text-text-dim bg-surface'}`}
+                                        className="p-2.5 rounded-xl transition-all active:scale-90"
+                                        style={product.visible
+                                            ? { color: '#2d6a2d', background: 'rgba(45,106,45,0.10)' }
+                                            : { color: 'rgba(0,0,0,0.30)', background: 'rgba(0,0,0,0.04)' }
+                                        }
                                     >
                                         {product.visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                                     </button>
                                     <button
                                         onClick={() => openEdit(product)}
-                                        className="p-2.5 rounded-xl text-blue-500 bg-blue-500/10 active:scale-90 transition-all"
+                                        className="p-2.5 rounded-xl active:scale-90 transition-all"
+                                        style={{ color: '#2d6a2d', background: 'rgba(45,106,45,0.08)' }}
                                     >
                                         <Edit2 className="w-4 h-4" />
                                     </button>
@@ -453,20 +458,20 @@ export default function AdminProducts() {
             </div>
 
             {/* ── Desktop: Table ── */}
-            <div className="hidden sm:block border border-border rounded-2xl overflow-hidden bg-background shadow-sm">
+            <div className="hidden sm:block rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 2px 16px rgba(0,0,0,0.05)' }}>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="border-b border-border text-text-muted text-xs uppercase tracking-widest">
-                                <th className="p-4 font-semibold">Imagen</th>
-                                <th className="p-4 font-semibold">Nombre</th>
-                                <th className="p-4 font-semibold">Categoría</th>
-                                <th className="p-4 font-semibold">Precio</th>
-                                <th className="p-4 font-semibold text-center">Visible</th>
-                                <th className="p-4 font-semibold text-right">Acciones</th>
+                            <tr style={{ borderBottom: '1px solid rgba(0,0,0,0.07)', background: '#f7f7f5' }}>
+                                {['Imagen','Nombre','Categoría','Precio','Visible','Acciones'].map((h, i) => (
+                                    <th key={h} className={`p-4 font-body font-semibold text-[10px] uppercase tracking-[0.2em]`}
+                                        style={{ color: 'rgba(0,0,0,0.40)', textAlign: i === 5 ? 'right' : i === 4 ? 'center' : 'left' }}>
+                                        {h}
+                                    </th>
+                                ))}
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-border">
+                        <tbody className="divide-y" style={{ '--tw-divide-opacity': 1 }}>
                             {loading ? (
                                 [...Array(4)].map((_, i) => (
                                     <tr key={i}><td colSpan="6" className="p-4">
@@ -479,7 +484,16 @@ export default function AdminProducts() {
                                 </td></tr>
                             ) : (
                                 filteredProducts.map((product) => (
-                                    <tr key={product.id} className={`transition-colors hover:bg-surface/50 ${!product.visible ? 'opacity-50' : ''}`}>
+                                    <tr key={product.id}
+                                        className="transition-colors"
+                                        style={{
+                                            opacity: product.visible ? 1 : 0.45,
+                                            borderBottom: '1px solid rgba(0,0,0,0.06)',
+                                            background: '#fff',
+                                        }}
+                                        onMouseEnter={e => e.currentTarget.style.background = '#fafaf8'}
+                                        onMouseLeave={e => e.currentTarget.style.background = '#fff'}
+                                    >
                                         <td className="p-4">
                                             <div className="w-12 h-12 rounded-xl bg-surface overflow-hidden border border-border flex items-center justify-center">
                                                 {product.image_url
@@ -500,14 +514,19 @@ export default function AdminProducts() {
                                         </td>
                                         <td className="p-4 text-center">
                                             <button onClick={() => handleToggleVisible(product)}
-                                                className={`cursor-pointer p-1.5 rounded-lg transition-all ${product.visible ? 'text-green-500 hover:bg-green-500/10' : 'text-text-dim hover:bg-surface'}`}>
+                                                className="cursor-pointer p-1.5 rounded-lg transition-all"
+                                                style={product.visible
+                                                    ? { color: '#2d6a2d' }
+                                                    : { color: 'rgba(0,0,0,0.28)' }
+                                                }>
                                                 {product.visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                                             </button>
                                         </td>
                                         <td className="p-4">
                                             <div className="flex items-center justify-end gap-1">
                                                 <button onClick={() => openEdit(product)}
-                                                    className="cursor-pointer p-2 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-all">
+                                                    className="cursor-pointer p-2 rounded-lg transition-all"
+                                                style={{ color: '#2d6a2d' }}>
                                                     <Edit2 className="w-4 h-4" />
                                                 </button>
                                                 <button onClick={() => handleDelete(product)}

@@ -4,32 +4,32 @@
   /* ── Brand ──────────────────────────────── */
   --color-primary:       #2d6a2d;
   --color-primary-dark:  #1a4a1a;
-  --color-primary-light: rgba(45, 106, 45, 0.12);
+  --color-primary-light: rgba(45, 106, 45, 0.10);
 
-  /* ── Dark palette ───────────────────────── */
-  --color-bg:       #0a0a0a;
-  --color-cream:    #111111;
-  --color-surface:  #141414;
-  --color-surface2: #1a1a1a;
-  --color-border:   rgba(255, 255, 255, 0.07);
-  --color-border2:  rgba(255, 255, 255, 0.13);
+  /* ── Light palette (admin) ──────────────── */
+  --color-bg:       #ffffff;
+  --color-cream:    #F5F1EA;
+  --color-surface:  #f7f7f5;
+  --color-surface2: #f0efed;
+  --color-border:   rgba(0, 0, 0, 0.08);
+  --color-border2:  rgba(0, 0, 0, 0.14);
 
   /* ── Text ───────────────────────────────── */
-  --color-text:       #f0f0f0;
-  --color-text-muted: rgba(255, 255, 255, 0.50);
-  --color-text-dim:   rgba(255, 255, 255, 0.30);
+  --color-text:       #111111;
+  --color-text-muted: rgba(0, 0, 0, 0.50);
+  --color-text-dim:   rgba(0, 0, 0, 0.28);
 
   /* ── Accents ────────────────────────────── */
-  --color-green-bright: #4ade80;
+  --color-green-bright: #2d6a2d;
   --color-amber:        #F59E0B;
 
-  /* ── Backwards compat aliases ───────────── */
-  --color-background:   #0a0a0a;
-  --color-secondary:    #f0f0f0;
-  --color-card:         #141414;
-  --color-surface-light:#1a1a1a;
+  /* ── Aliases ────────────────────────────── */
+  --color-background:   #ffffff;
+  --color-secondary:    #111111;
+  --color-card:         #f7f7f5;
+  --color-surface-light:#f0efed;
   --color-accent:       #2d6a2d;
-  --color-text-light:   rgba(255, 255, 255, 0.45);
+  --color-text-light:   rgba(0, 0, 0, 0.40);
 }
 
 /* ── Base ─────────────────────────────────── */
@@ -40,14 +40,14 @@
 }
 
 html {
-  background-color: #ffffff;
+  background-color: #F5F0E8;
   overscroll-behavior: none;
   scroll-behavior: smooth;
   overflow-anchor: none;
 }
 
 body {
-  background-color: #ffffff;
+  background-color: #F5F0E8;
   color: #0a0a0a;
   margin: 0;
   font-family: 'DM Sans', system-ui, sans-serif;
@@ -293,11 +293,16 @@ body, #root {
   transform: translateZ(0);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  transition: transform 0.18s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
   will-change: transform;
+}
+.product-card:hover {
+  transform: translateY(-3px) translateZ(0);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.10) !important;
 }
 .product-card:active {
   transform: scale(0.975) translateZ(0);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.10) !important;
 }
 
 .card-gradient {

@@ -129,7 +129,7 @@ export default function PromoCarousel() {
     /* ── Single promo — static, no marquee ── */
     if (count === 1) {
         return (
-            <div style={{ background: '#ffffff' }} className="py-8">
+            <div style={{ background: '#F5F0E8' }} className="py-8">
                 <div className="max-w-6xl mx-auto">
                     <Heading />
                     <div className="px-4 sm:px-6 flex justify-center">
@@ -162,7 +162,7 @@ export default function PromoCarousel() {
     const duration = trackWidth > 0 ? trackWidth / 24 : 0;
 
     return (
-        <div style={{ background: '#ffffff' }} className="py-8">
+        <div style={{ background: '#F5F0E8' }} className="py-8">
             <div className="max-w-6xl mx-auto">
                 <Heading />
 
@@ -194,11 +194,11 @@ export default function PromoCarousel() {
                     {/* Edge fade gradients — blancas */}
                     <div
                         className="absolute inset-y-0 left-0 w-10 pointer-events-none z-[1]"
-                        style={{ background: 'linear-gradient(to right, #ffffff 0%, transparent 100%)' }}
+                        style={{ background: 'linear-gradient(to right, #F5F0E8 0%, transparent 100%)' }}
                     />
                     <div
                         className="absolute inset-y-0 right-0 w-10 pointer-events-none z-[1]"
-                        style={{ background: 'linear-gradient(to left, #ffffff 0%, transparent 100%)' }}
+                        style={{ background: 'linear-gradient(to left, #F5F0E8 0%, transparent 100%)' }}
                     />
                 </div>
             </div>

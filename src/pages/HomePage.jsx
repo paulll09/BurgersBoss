@@ -91,7 +91,7 @@ export default function HomePage() {
             <motion.section
                 className="relative boss-watermark"
                 style={{
-                    backgroundColor: '#ffffff',
+                    backgroundColor: '#F5F0E8',
                     backgroundImage: `url("data:image/svg+xml,${BOSS_TILE}")`,
                     backgroundRepeat: 'repeat',
                     backgroundSize: '280px 120px',
@@ -203,7 +203,7 @@ export default function HomePage() {
                             }}
                         />
 
-                        <p style={{ fontSize: '1.08rem', color: '#333333', lineHeight: 1.84, marginBottom: '1.8rem' }}>
+                        <p style={{ fontSize: '1.08rem', color: '#444444', lineHeight: 1.84, marginBottom: '1.8rem' }}>
                             No somos una hamburguesería más. En Burger Boss, cada ingrediente es
                             seleccionado para crear una experiencia de sabor dominante. Carne{' '}
                             <span style={{ fontWeight: 700, color: '#1a4a1a' }}>100% vacuna</span>,
