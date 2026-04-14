@@ -18,7 +18,10 @@
       "Bash(npx vite:*)",
       "Bash(npx skills:*)",
       "Bash(node -e \"const s = require\\('C:/Users/aquin/.claude/settings.json'\\); console.log\\('OK:', s.hooks.PreCompact[0].hooks[0].type, '|', s.hooks.PreCompact[0].hooks[0].statusMessage\\)\")",
-      "Bash(node -e \"const icons = require\\('c:/Users/aquin/burgers-boss/node_modules/lucide-react'\\); const names = Object.keys\\(icons\\).filter\\(n => /bike|moto|scooter|cycle|motor|wheel|delivery|dispatch|courier/i.test\\(n\\)\\); console.log\\(names\\);\")"
+      "Bash(node -e \"const icons = require\\('c:/Users/aquin/burgers-boss/node_modules/lucide-react'\\); const names = Object.keys\\(icons\\).filter\\(n => /bike|moto|scooter|cycle|motor|wheel|delivery|dispatch|courier/i.test\\(n\\)\\); console.log\\(names\\);\")",
+      "Bash(gh repo:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(claude plugin:*)"
     ]
   }
 }

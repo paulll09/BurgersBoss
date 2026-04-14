@@ -86,7 +86,7 @@ export default function Cart() {
     };
 
     /* ── Header ──────────────────────────────── */
-    const PageHeader = ({ showClear }) => (
+    const PageHeader = () => (
         <div
             className="relative w-full overflow-hidden"
             style={{ background: PAGE_BG, borderBottom: `1px solid ${BORDER_SOFT}` }}
@@ -104,16 +104,6 @@ export default function Cart() {
                 />
             </Link>
 
-            {showClear && (
-                <button
-                    onClick={clearCart}
-                    className="cursor-pointer absolute top-5 right-5 z-10 flex items-center gap-1.5 text-xs uppercase tracking-widest font-semibold transition-colors px-3 py-2.5 rounded-full"
-                    style={{ color: '#c0392b', background: 'rgba(192,57,43,0.07)', border: `1px solid rgba(192,57,43,0.18)` }}
-                >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    Vaciar
-                </button>
-            )}
 
             <div className="px-5 pt-16 pb-8">
                 <div aria-label="Tu Pedido">
@@ -132,11 +122,6 @@ export default function Cart() {
                 </div>
                 <div className="flex items-center gap-3 mt-5">
                     <div style={{ height: '3px', width: '36px', background: FOREST, borderRadius: '2px', flexShrink: 0 }} />
-                    {showClear && (
-                        <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: TEXT_MUTED }}>
-                            {items.length} {items.length === 1 ? 'producto' : 'productos'}
-                        </span>
-                    )}
                 </div>
             </div>
         </div>
@@ -146,7 +131,7 @@ export default function Cart() {
     if (items.length === 0) {
         return (
             <div className="min-h-screen animate-fade-in" style={{ background: PAGE_BG }}>
-                <PageHeader showClear={false} />
+                <PageHeader />
                 <div className="flex flex-col items-center justify-center py-20 px-4">
                     <div
                         className="w-20 h-20 rounded-full flex items-center justify-center mb-7"
@@ -174,9 +159,24 @@ export default function Cart() {
     /* ── Con productos ────────────────────────── */
     return (
         <div className="min-h-screen animate-fade-in" style={{ background: PAGE_BG }}>
-            <PageHeader showClear={true} />
+            <PageHeader />
 
             <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+
+                {/* Vaciar carrito — encima de los productos */}
+                <div className="flex items-center justify-between mb-4">
+                    <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: TEXT_MUTED }}>
+                        {items.length} {items.length === 1 ? 'producto' : 'productos'}
+                    </span>
+                    <button
+                        onClick={clearCart}
+                        className="cursor-pointer flex items-center gap-1.5 text-xs uppercase tracking-widest font-semibold transition-all px-3 py-2 rounded-full active:scale-95"
+                        style={{ color: '#c0392b', background: 'rgba(192,57,43,0.07)', border: `1px solid rgba(192,57,43,0.18)` }}
+                    >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Vaciar
+                    </button>
+                </div>
 
                 {/* Items del carrito */}
                 <div className="space-y-2.5 mb-7">
@@ -185,7 +185,7 @@ export default function Cart() {
                         return (
                             <div
                                 key={key}
-                                className="animate-fade-up flex items-center gap-3 p-3 rounded-2xl"
+                                className="animate-fade-up flex items-center gap-2.5 p-3 rounded-2xl"
                                 style={{
                                     animationDelay: `${i * 55}ms`,
                                     background: '#f7f3ee',
@@ -193,58 +193,64 @@ export default function Cart() {
                                     boxShadow: '0 1px 6px rgba(45,106,45,0.06)',
                                 }}
                             >
+                                {/* Thumbnail */}
                                 <div
-                                    className="w-16 h-16 rounded-xl overflow-hidden shrink-0 flex items-center justify-center"
-                                    style={{ background: '#f0f0ed' }}
+                                    className="w-14 h-14 rounded-xl overflow-hidden shrink-0 flex items-center justify-center"
+                                    style={{ background: '#e8e4de', minWidth: '56px' }}
                                 >
                                     {item.image_url
-                                        ? <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+                                        ? <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                                         : <ImageIcon className="w-5 h-5" style={{ color: TEXT_DIM }} />
                                     }
                                 </div>
-                                <div className="flex-grow min-w-0">
-                                    <p className="font-display text-lg uppercase leading-tight" style={{ color: TEXT_MAIN }}>
-                                        {item.name}{item.variantName ? ` — ${item.variantName}` : ''}
+
+                                {/* Info — min-w-0 para truncar correctamente */}
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-display text-base uppercase leading-tight truncate" style={{ color: TEXT_MAIN }}>
+                                        {item.name}{item.variantName ? ` (${item.variantName})` : ''}
                                     </p>
-                                    <div className="flex items-center gap-1.5">
-                                        <span className="font-body text-sm font-semibold" style={{ color: FOREST }}>
+                                    <div className="flex items-center gap-1.5 mt-0.5">
+                                        <span className="text-sm font-semibold" style={{ color: FOREST }}>
                                             ${item.price.toLocaleString('es-AR')}
                                         </span>
                                         {item.originalPrice && item.originalPrice !== item.price && (
-                                            <span className="font-body text-xs line-through" style={{ color: TEXT_DIM }}>
+                                            <span className="text-xs line-through" style={{ color: TEXT_DIM }}>
                                                 ${item.originalPrice.toLocaleString('es-AR')}
                                             </span>
                                         )}
                                     </div>
                                 </div>
-                                {/* Controles cantidad */}
+
+                                {/* Qty — touch targets 44px */}
                                 <div
-                                    className="flex items-center gap-1 rounded-full p-0.5 shrink-0"
-                                    style={{ background: '#f4f4f2', border: `1px solid ${BORDER_GREEN}` }}
+                                    className="flex items-center rounded-full shrink-0"
+                                    style={{ background: '#ece8e2', border: `1px solid ${BORDER_GREEN}`, gap: '2px', padding: '2px' }}
                                 >
                                     <button
                                         onClick={() => updateQuantity(key, item.quantity - 1)}
-                                        aria-label={`Reducir cantidad de ${item.name}`}
-                                        className="cursor-pointer w-9 h-9 flex items-center justify-center rounded-full transition-all active:scale-90"
-                                        style={{ color: FOREST }}
+                                        aria-label={`Reducir ${item.name}`}
+                                        className="cursor-pointer w-[38px] h-[38px] flex items-center justify-center rounded-full transition-all active:scale-90"
+                                        style={{ color: FOREST, minWidth: '38px' }}
                                     >
                                         <Minus className="w-3.5 h-3.5" />
                                     </button>
-                                    <span className="w-6 text-center font-bold text-sm" style={{ color: TEXT_MAIN }}>{item.quantity}</span>
+                                    <span className="w-5 text-center font-bold text-sm select-none" style={{ color: TEXT_MAIN }}>{item.quantity}</span>
                                     <button
                                         onClick={() => updateQuantity(key, item.quantity + 1)}
-                                        aria-label={`Aumentar cantidad de ${item.name}`}
-                                        className="cursor-pointer w-9 h-9 flex items-center justify-center rounded-full transition-all active:scale-90"
-                                        style={{ color: FOREST }}
+                                        aria-label={`Aumentar ${item.name}`}
+                                        className="cursor-pointer w-[38px] h-[38px] flex items-center justify-center rounded-full transition-all active:scale-90"
+                                        style={{ color: FOREST, minWidth: '38px' }}
                                     >
                                         <Plus className="w-3.5 h-3.5" />
                                     </button>
                                 </div>
+
+                                {/* Eliminar */}
                                 <button
                                     onClick={() => removeItem(key)}
                                     aria-label={`Eliminar ${item.name}`}
-                                    className="cursor-pointer w-9 h-9 flex items-center justify-center rounded-full transition-all shrink-0 hover:bg-red-50"
-                                    style={{ color: TEXT_DIM }}
+                                    className="cursor-pointer w-[38px] h-[38px] flex items-center justify-center rounded-full transition-all shrink-0 active:scale-90"
+                                    style={{ color: TEXT_DIM, minWidth: '38px' }}
                                 >
                                     <Trash2 className="w-4 h-4" />
                                 </button>
