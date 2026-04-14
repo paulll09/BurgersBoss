@@ -4,13 +4,13 @@ import { supabase } from '../lib/supabase';
 const DAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
 const DUMMY_SCHEDULE = {
-    monday:    { open: false, from: '20:00', to: '00:00' },
-    tuesday:   { open: false, from: '20:00', to: '00:00' },
-    wednesday: { open: false, from: '20:00', to: '00:00' },
-    thursday:  { open: true,  from: '20:00', to: '00:00' },
-    friday:    { open: true,  from: '20:00', to: '02:00' },
-    saturday:  { open: true,  from: '20:00', to: '02:00' },
-    sunday:    { open: true,  from: '20:00', to: '00:00' },
+    monday:    { open: true,  from: '09:00', to: '00:00' },
+    tuesday:   { open: true,  from: '09:00', to: '00:00' },
+    wednesday: { open: true,  from: '09:00', to: '00:00' },
+    thursday:  { open: true,  from: '09:00', to: '00:00' },
+    friday:    { open: true,  from: '09:00', to: '02:00' },
+    saturday:  { open: true,  from: '09:00', to: '02:00' },
+    sunday:    { open: true,  from: '09:00', to: '00:00' },
 };
 
 const BUSINESS_ID = import.meta.env.VITE_BUSINESS_ID;
@@ -26,7 +26,7 @@ function toMinutes(timeStr) {
 }
 
 export function computeIsOpen(schedule) {
-    if (!schedule) return false;
+    if (!schedule) return true; // sin schedule = siempre abierto (dev/pruebas)
 
     const now = new Date();
     const todayIndex     = now.getDay();
@@ -70,7 +70,8 @@ export function useSchedule() {
         setError(null);
 
         if (!isSupabaseConfigured()) {
-            setSchedule(DUMMY_SCHEDULE);
+            // Sin Supabase: siempre abierto para pruebas locales
+            setSchedule(null);
             setLoading(false);
             return;
         }

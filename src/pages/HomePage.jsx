@@ -16,7 +16,7 @@ const EASE = [0.22, 1, 0.36, 1];
 const BOSS_TILE = encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" width="280" height="120">' +
     '<text x="14" y="82" font-family="Arial Black,Arial" font-size="62" font-weight="900" ' +
-    'fill="rgba(0,0,0,0.055)" letter-spacing="6" transform="rotate(-16,140,60)">BOSS</text></svg>'
+    'fill="rgba(0,0,0,0.028)" letter-spacing="6" transform="rotate(-16,140,60)">BOSS</text></svg>'
 );
 
 /* ── SVG Icons ───────────────────────────────────────────────── */
@@ -89,13 +89,12 @@ export default function HomePage() {
                 SECCIÓN PRINCIPAL — Bold & Urban
             ══════════════════════════════════════════════════════ */}
             <motion.section
-                className="relative"
+                className="relative boss-watermark"
                 style={{
                     backgroundColor: '#ffffff',
                     backgroundImage: `url("data:image/svg+xml,${BOSS_TILE}")`,
                     backgroundRepeat: 'repeat',
                     backgroundSize: '280px 120px',
-                    backgroundAttachment: 'fixed',
                     borderRadius: '28px 28px 0 0',
                 }}
                 initial={{ opacity: 0 }}
