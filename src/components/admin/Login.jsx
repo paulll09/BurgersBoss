@@ -30,7 +30,7 @@ export default function Login() {
     const handleLogin = async (e) => {
         e.preventDefault();
         setLoading(true);
-        const email = import.meta.env.VITE_ADMIN_EMAIL;
+        const email = 'burgersboss@gmail.com';
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) {
             toast.error(traducirError(error.message));
