@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { Download, Printer, Plus, Minus } from 'lucide-react';
 
-const DEFAULT_URL = 'https://bulgariabar.com';
+const DEFAULT_URL = import.meta.env.VITE_SITE_URL ?? window.location.origin;
 
 export default function AdminQR() {
     const [url, setUrl] = useState(DEFAULT_URL);
@@ -27,7 +27,7 @@ export default function AdminQR() {
         ctx.drawImage(canvas, padding, padding);
 
         const link = document.createElement('a');
-        link.download = 'qr-menu-bulgaria.png';
+        link.download = 'qr-menu-burgers-boss.png';
         link.href = offscreen.toDataURL('image/png');
         link.click();
     };
@@ -39,7 +39,7 @@ export default function AdminQR() {
 
         const printWindow = window.open('', '_blank');
         printWindow.document.write(`
-            <html><head><title>QR - Bar Bulgaria</title>
+            <html><head><title>QR - Burgers Boss</title>
             <style>
                 * { margin: 0; padding: 0; box-sizing: border-box; }
                 body { font-family: system-ui, sans-serif; }
@@ -58,8 +58,8 @@ export default function AdminQR() {
             <div class="page">
                 ${Array.from({ length: copies }, () => `
                     <div class="qr-card">
-                        <div class="brand">Bulgaria</div>
-                        <div class="sub">Bar & Cocina</div>
+                        <div class="brand">Burgers Boss</div>
+                        <div class="sub">Pedí online</div>
                         <img src="${dataUrl}" />
                         <div class="scan">Escaneá para ver el menú</div>
                     </div>
@@ -91,7 +91,6 @@ export default function AdminQR() {
                             className="w-full px-4 py-3 rounded-xl border border-border bg-background text-secondary text-sm focus:outline-none focus:border-primary/50 transition-colors"
                             placeholder="https://tudominio.com"
                         />
-                        
                     </div>
                     <div>
                         <label className="block text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">Copias para imprimir</label>
@@ -127,8 +126,8 @@ export default function AdminQR() {
                 {/* Preview */}
                 <div className="flex flex-col items-center">
                     <div className="border border-border rounded-2xl p-6 bg-white w-fit">
-                        <p className="text-center font-display font-black text-lg uppercase tracking-wider text-gray-900 mb-0.5">Bulgaria</p>
-                        <p className="text-center text-[9px] uppercase tracking-[0.3em] text-gray-400 mb-4">Bar & Cocina</p>
+                        <p className="text-center font-display font-black text-lg uppercase tracking-wider text-gray-900 mb-0.5">Burgers Boss</p>
+                        <p className="text-center text-[9px] uppercase tracking-[0.3em] text-gray-400 mb-4">Pedí online</p>
                         <div ref={qrRef}>
                             <QRCodeCanvas
                                 value={url}

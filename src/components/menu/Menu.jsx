@@ -180,7 +180,7 @@ export default function Menu({ products, categories: rawCategories, loading, err
                                 ref={(el) => { btnRefs.current[cat.id] = el; }}
                                 data-active={active}
                                 onClick={() => scrollToCategory(cat.id)}
-                                className="cursor-pointer relative z-10 shrink-0 px-3 py-1.5 rounded-full text-[10px] font-semibold uppercase tracking-wider transition-colors duration-300 active:scale-95"
+                                className="cursor-pointer relative z-10 shrink-0 px-3 py-2 rounded-full text-[12px] font-semibold uppercase tracking-wider transition-colors duration-300 active:scale-95"
                                 style={active
                                     ? { color: '#ffffff' }
                                     : { color: 'rgba(0,0,0,0.50)', boxShadow: '0 0 0 1px rgba(0,0,0,0.10)', background: 'rgba(0,0,0,0.04)' }

@@ -24,7 +24,7 @@ export default function Loader() {
         >
             <div className="flex flex-col items-center">
                 <img
-                    src="/LogoBurgersBossSinFondo.png"
+                    src="/LogoBurgersBossSinFondo.webp"
                     alt="Burgers Boss"
                     className="object-contain animate-loader-bounce"
                     style={{ width: '140px', height: 'auto' }}

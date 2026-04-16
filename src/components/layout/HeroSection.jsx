@@ -23,8 +23,8 @@ export default function HeroSection() {
         <section
             className="relative w-full overflow-hidden flex flex-col items-center justify-center"
             style={{
-                height: fixedH ?? '100svh',
-                minHeight: fixedH ?? '100svh',
+                height: fixedH ? `${fixedH}px` : '100dvh',
+                minHeight: fixedH ? `${fixedH}px` : '-webkit-fill-available',
                 backgroundColor: '#0a0a0a',
             }}
         >
@@ -81,7 +81,7 @@ export default function HeroSection() {
                 {/* Logo sin fondo con animación de entrada */}
                 <div className="relative animate-hero-logo-drop" style={{ animationDelay: d(120) }}>
                     <img
-                        src="/LogoBurgersBossSinFondo.png"
+                        src="/LogoBurgersBossSinFondo.webp"
                         alt="Burgers Boss"
                         className="animate-logo-float-idle select-none relative"
                         style={{
@@ -104,9 +104,9 @@ export default function HeroSection() {
                     style={{
                         animationDelay: d(780),
                         marginTop: '2.5rem',
-                        background: '#F59E0B',
-                        color: '#0a0a0a',
-                        boxShadow: '0 4px 28px rgba(245,158,11,0.45), 0 1px 0 rgba(255,255,255,0.25) inset',
+                        background: '#2d6a2d',
+                        color: '#ffffff',
+                        boxShadow: '0 4px 28px rgba(45,106,45,0.45), 0 1px 0 rgba(255,255,255,0.15) inset',
                     }}
                 >
                     Ver el Menú

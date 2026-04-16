@@ -63,7 +63,7 @@ function App() {
   const { isOpen, schedule } = useSchedule();
 
   useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 2200);
+    const t = setTimeout(() => setLoading(false), 800);
     return () => clearTimeout(t);
   }, []);
 

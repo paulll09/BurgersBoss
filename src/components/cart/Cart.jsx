@@ -24,6 +24,8 @@ const BORDER = 'rgba(0,0,0,0.07)';
 const field = (err) =>
     `w-full border ${err ? 'border-red-400' : 'border-[rgba(0,0,0,0.12)]'} rounded-2xl bg-white px-4 py-3.5 text-[15px] text-[#0f0f0f] outline-none font-body transition-all focus:border-[#2d6a2d] focus:ring-2 focus:ring-[rgba(45,106,45,0.10)] placeholder:text-[#ccc]`;
 
+const sanitize = (str) => str.trim().slice(0, 300).replace(/[\u0000-\u001F\u007F]/g, '');
+
 const stagger = {
     visible: { transition: { staggerChildren: 0.07 } },
 };
@@ -75,7 +77,10 @@ export default function Cart() {
     const handleCheckout = () => {
         if (!orderType || !validate()) return;
         const phone = import.meta.env.VITE_WHATSAPP_PHONE ?? '5493716400743';
-        let text = `¡Hola! Soy *${checkoutForm.name.trim()}* y quiero hacer el siguiente pedido:\n\n`;
+        const name    = sanitize(checkoutForm.name);
+        const address = sanitize(checkoutForm.address);
+        const notes   = sanitize(checkoutForm.notes);
+        let text = `¡Hola! Soy *${name}* y quiero hacer el siguiente pedido:\n\n`;
         items.forEach(item => {
             const n = item.variantName ? `${item.name} (${item.variantName})` : item.name;
             text += `• ${item.quantity}x ${n} — $${(item.price * item.quantity).toLocaleString('es-AR')}\n`;
@@ -85,11 +90,11 @@ export default function Cart() {
             : `\n*TOTAL: $${totalPrice.toLocaleString('es-AR')}*\n\n`;
         text += orderType === 'pickup' ? `🏠 *Modalidad:* Retiro en el local\n` : `🚚 *Modalidad:* Envío a domicilio\n`;
         if (orderType === 'delivery') {
-            if (checkoutForm.address.trim()) text += `📍 *Dirección:* ${checkoutForm.address.trim()}\n`;
+            if (address) text += `📍 *Dirección:* ${address}\n`;
             if (geoLocation) text += `🗺️ *Ubicación:* https://maps.google.com/?q=${geoLocation.lat},${geoLocation.lng}\n`;
         }
         text += `💳 *Pago:* ${{ efectivo: 'Efectivo', transferencia: 'Transferencia' }[checkoutForm.paymentMethod]}\n`;
-        if (checkoutForm.notes.trim()) text += `📝 *Aclaraciones:* ${checkoutForm.notes.trim()}\n`;
+        if (notes) text += `📝 *Aclaraciones:* ${notes}\n`;
         window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
         clearCart();
     };
@@ -222,8 +227,8 @@ export default function Cart() {
                                     >
                                         <button
                                             onClick={() => updateQuantity(key, item.quantity - 1)}
-                                            className="cursor-pointer w-8 h-8 flex items-center justify-center rounded-full transition-all active:scale-90 hover:bg-gray-50"
-                                            style={{ color: BLACK, minWidth: '32px' }}
+                                            className="cursor-pointer w-11 h-11 flex items-center justify-center rounded-full transition-all active:scale-90 hover:bg-gray-50"
+                                            style={{ color: BLACK, minWidth: '44px' }}
                                             aria-label={`Reducir ${item.name}`}
                                         >
                                             <Minus className="w-3 h-3" />
@@ -233,8 +238,8 @@ export default function Cart() {
                                         </span>
                                         <button
                                             onClick={() => updateQuantity(key, item.quantity + 1)}
-                                            className="cursor-pointer w-8 h-8 flex items-center justify-center rounded-full transition-all active:scale-90 hover:bg-gray-50"
-                                            style={{ color: G, minWidth: '32px' }}
+                                            className="cursor-pointer w-11 h-11 flex items-center justify-center rounded-full transition-all active:scale-90 hover:bg-gray-50"
+                                            style={{ color: G, minWidth: '44px' }}
                                             aria-label={`Aumentar ${item.name}`}
                                         >
                                             <Plus className="w-3 h-3" />

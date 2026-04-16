@@ -46,7 +46,7 @@ function MarqueeStrip() {
                         className="inline-flex items-center gap-3.5 px-5 text-[10px] font-bold uppercase tracking-[0.25em] flex-shrink-0"
                         style={{ color: 'rgba(255,255,255,0.30)' }}
                     >
-                        <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#F59E0B' }} />
+                        <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#2d6a2d' }} />
                         {item}
                     </span>
                 ))}
@@ -81,7 +81,7 @@ export default function Footer() {
                             <div style={{
                                 height: '2px',
                                 width: '40px',
-                                background: '#F59E0B',
+                                background: '#2d6a2d',
                                 marginBottom: '1.5rem',
                             }} />
 
@@ -96,7 +96,7 @@ export default function Footer() {
                                 }}
                             >
                                 Burgers<br />
-                                <span style={{ color: '#F59E0B' }}>Boss.</span>
+                                <span style={{ color: '#2d6a2d' }}>Boss.</span>
                             </h2>
 
                             {/* Tagline */}
@@ -114,7 +114,7 @@ export default function Footer() {
 
                         {/* Logo flotando a la derecha */}
                         <img
-                            src="/LogoBurgersBossSinFondo.png"
+                            src="/LogoBurgersBossSinFondo.webp"
                             alt="Burgers Boss"
                             className="w-20 sm:w-28 h-auto object-contain flex-shrink-0"
                             style={{ marginTop: '3rem', opacity: 0.75 }}
@@ -138,7 +138,7 @@ export default function Footer() {
                         >
                             <span
                                 className="font-bold uppercase mb-3 select-none"
-                                style={{ fontSize: '0.55rem', letterSpacing: '0.34em', color: '#F59E0B' }}
+                                style={{ fontSize: '0.7rem', letterSpacing: '0.25em', color: '#2d6a2d' }}
                             >
                                 Dónde estamos
                             </span>
@@ -163,7 +163,7 @@ export default function Footer() {
                         >
                             <span
                                 className="font-bold uppercase mb-3 select-none"
-                                style={{ fontSize: '0.55rem', letterSpacing: '0.34em', color: '#F59E0B' }}
+                                style={{ fontSize: '0.7rem', letterSpacing: '0.25em', color: '#2d6a2d' }}
                             >
                                 Horarios
                             </span>
@@ -188,7 +188,7 @@ export default function Footer() {
                         >
                             <span
                                 className="font-bold uppercase mb-3 select-none"
-                                style={{ fontSize: '0.55rem', letterSpacing: '0.34em', color: '#F59E0B' }}
+                                style={{ fontSize: '0.7rem', letterSpacing: '0.25em', color: '#2d6a2d' }}
                             >
                                 Seguinos
                             </span>

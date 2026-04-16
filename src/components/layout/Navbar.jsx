@@ -13,7 +13,7 @@ export default function Navbar() {
             <nav
                 className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
                 style={{
-                    background: 'rgba(10,10,10,0.88)',
+                    background: 'rgba(10,10,10,0.95)',
                     borderBottom: '1px solid rgba(255,255,255,0.07)',
                     backdropFilter: 'blur(16px)',
                     WebkitBackdropFilter: 'blur(16px)',
@@ -26,7 +26,7 @@ export default function Navbar() {
                     {/* Logo */}
                     <Link to="/" className="flex items-center gap-2.5 group">
                         <img
-                            src="/Logo-BurgersBoss.PNG"
+                            src="/Logo-BurgersBoss.webp"
                             alt="Burgers Boss"
                             className="h-9 w-auto object-contain group-hover:scale-105 transition-all duration-300"
                         />
@@ -47,7 +47,10 @@ export default function Navbar() {
                             style={{ color: 'rgba(255,255,255,0.75)' }}
                         />
                         {totalItems > 0 && (
-                            <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-primary rounded-full animate-spring border-2 border-[#0a0a0a]">
+                            <span
+                                className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-primary rounded-full animate-spring border-2 border-[#0a0a0a]"
+                                aria-label={`${totalItems} producto${totalItems !== 1 ? 's' : ''} en el carrito`}
+                            >
                                 {totalItems}
                             </span>
                         )}

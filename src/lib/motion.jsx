@@ -42,7 +42,7 @@ export const slideLeft = {
 export const staggerContainer = {
     hidden: {},
     visible: {
-        transition: { staggerChildren: 0.12, delayChildren: 0.05 },
+        transition: { staggerChildren: 0.07, delayChildren: 0.05 },
     },
 };
 

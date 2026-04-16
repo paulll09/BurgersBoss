@@ -269,7 +269,7 @@ export default function ProductCard({ product, categoryName }) {
                                             {isOpen && (
                                                 <button
                                                     onClick={(e) => handleAddVariant(e, variant)}
-                                                    className="add-btn cursor-pointer flex items-center justify-center w-8 h-8 rounded-full text-white active:scale-85 shrink-0"
+                                                    className="add-btn cursor-pointer flex items-center justify-center w-11 h-11 rounded-full text-white active:scale-85 shrink-0"
                                                     style={{
                                                         background: FOREST,
                                                         boxShadow: `0 3px 10px rgba(45,106,45,0.35)`,
