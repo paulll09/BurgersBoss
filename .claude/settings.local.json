@@ -23,7 +23,16 @@
       "WebFetch(domain:github.com)",
       "Bash(claude plugin:*)",
       "WebFetch(domain:bulgariabarbcn.com)",
-      "WebFetch(domain:bulgariabarbcn.vercel.app)"
+      "WebFetch(domain:bulgariabarbcn.vercel.app)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(python skills/ui-ux-pro-max/scripts/search.py \"restaurant burger food dark premium modal overlay\" --design-system -p \"BurgersBoss\")",
+      "Bash(python3 skills/ui-ux-pro-max/scripts/search.py \"restaurant burger food dark premium modal overlay\" --design-system -p \"BurgersBoss\")",
+      "Bash(python .claude/skills/ui-ux-pro-max/scripts/search.py \"restaurant burger food dark premium modal overlay\" --design-system -p \"BurgersBoss\")",
+      "Bash(where python3 *)",
+      "Bash(where python *)",
+      "Bash(py --version)",
+      "Bash(find \"c:\\\\Users\\\\aquin\\\\burgers-boss\\\\public\" -type f -exec ls -lh {} \\\\;)"
     ]
   }
 }
