@@ -71,32 +71,33 @@ const SpotlightCard = memo(function SpotlightCard({ product, badgeType, onOpenMo
     const { isOpen } = useContext(BarCtx);
     const [imgLoaded, setImgLoaded] = useState(false);
 
-    const variants    = product.product_variants || [];
-    const hasVariants = variants.length > 0;
-    const isBurger    = hasVariants;
+    const variants        = product.product_variants || [];
+    const hasVariants     = variants.length > 0;
+    const hasComboOptions = (product.combo_options?.length ?? 0) > 0;
+    const needsModal      = hasVariants || hasComboOptions;
 
     const price = hasVariants
         ? Math.min(...variants.map(v => v.price))
         : getEffectivePrice(product);
 
     const openModal = useCallback(() => {
-        if (isBurger && onOpenModal) onOpenModal(product);
-    }, [isBurger, onOpenModal, product]);
+        if (needsModal && onOpenModal) onOpenModal(product);
+    }, [needsModal, onOpenModal, product]);
 
     const handleAdd = useCallback((e) => {
         e.stopPropagation();
-        if (isBurger && onOpenModal) { onOpenModal(product); return; }
+        if (needsModal && onOpenModal) { onOpenModal(product); return; }
         addItem({ ...product, price, originalPrice: product.price });
         toast.success(`${product.name} agregado`);
-    }, [isBurger, onOpenModal, product, addItem, price]);
+    }, [needsModal, onOpenModal, product, addItem, price]);
 
     return (
         <div
-            onClick={isBurger && onOpenModal ? openModal : undefined}
-            role={isBurger && onOpenModal ? 'button' : undefined}
-            tabIndex={isBurger && onOpenModal ? 0 : undefined}
-            onKeyDown={isBurger && onOpenModal ? (e) => e.key === 'Enter' && openModal() : undefined}
-            aria-label={isBurger && onOpenModal ? `Ver opciones de ${product.name}` : undefined}
+            onClick={needsModal && onOpenModal ? openModal : undefined}
+            role={needsModal && onOpenModal ? 'button' : undefined}
+            tabIndex={needsModal && onOpenModal ? 0 : undefined}
+            onKeyDown={needsModal && onOpenModal ? (e) => e.key === 'Enter' && openModal() : undefined}
+            aria-label={needsModal && onOpenModal ? `Ver opciones de ${product.name}` : undefined}
             style={{
                 scrollSnapAlign: 'start',
                 flexShrink: 0,
@@ -105,7 +106,7 @@ const SpotlightCard = memo(function SpotlightCard({ product, badgeType, onOpenMo
                 borderRadius: '20px',
                 overflow: 'hidden',
                 boxShadow: '0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.05)',
-                cursor: isBurger && onOpenModal ? 'pointer' : 'default',
+                cursor: needsModal && onOpenModal ? 'pointer' : 'default',
                 transform: 'translateZ(0)',
             }}
         >

@@ -7,13 +7,16 @@ function padNum(n) {
 }
 
 function buildHTML(order) {
-    const date    = new Date(order.created_at);
-    const dateStr = date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    const timeStr = date.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
-    const items   = Array.isArray(order.items) ? order.items : [];
+    const date       = new Date(order.created_at);
+    const dateStr    = date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const timeStr    = date.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+    const items      = Array.isArray(order.items) ? order.items : [];
+    const deliveryFee = Number(order.delivery_fee) || 0;
+    const subtotal   = deliveryFee > 0 ? order.total - deliveryFee : order.total;
 
     const itemsHTML = items.map(item => {
         const name = item.variantName ? `${item.name} (${item.variantName})` : item.name;
+        const comboHTML  = item.comboOptionName ? `<div class="extra">> ${item.comboOptionName}</div>` : '';
         const extrasHTML = (item.extras ?? []).map(e =>
             `<div class="extra">+ ${e.name}</div>`
         ).join('');
@@ -23,7 +26,7 @@ function buildHTML(order) {
                 <span class="iname">${name}</span>
                 <span class="iprice">${fmt(item.price * item.quantity)}</span>
             </div>
-            ${extrasHTML}
+            ${comboHTML}${extrasHTML}
         `;
     }).join('');
 
@@ -97,9 +100,20 @@ function buildHTML(order) {
 
   <div class="solid"></div>
 
+  ${deliveryFee > 0 ? `
+  <div class="total-row" style="font-size:11px;font-weight:normal">
+    <span>Subtotal</span>
+    <span>${fmt(subtotal)}</span>
+  </div>
+  <div class="total-row" style="font-size:11px;font-weight:normal">
+    <span>Costo de envio</span>
+    <span>${fmt(deliveryFee)}</span>
+  </div>
+  <div style="border-top:1px dashed #000;margin:4px 0"></div>
+  ` : ''}
   <div class="total-row">
     <span>TOTAL</span>
-    <span>${fmt(order.total)}${order.order_type === 'delivery' ? ' + envio' : ''}</span>
+    <span>${fmt(order.total)}</span>
   </div>
 
   <div class="meta">${order.order_type === 'delivery' ? 'Envio a domicilio' : 'Retira en el local'}</div>

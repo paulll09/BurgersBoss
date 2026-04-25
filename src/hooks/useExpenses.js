@@ -129,15 +129,20 @@ export function useExpenses(period = 'month') {
     return { expenses, loading, total, createExpense, updateExpense, deleteExpense, refetch: fetch };
 }
 
-/* ── Lightweight: total expenses for a period (used in Ventas) ── */
-export async function fetchExpensesTotal(period) {
-    const { from, to } = periodRange(period);
-    let q = supabase
-        .from('expenses')
-        .select('amount')
-        .eq('business_id', BUSINESS_ID);
-    if (from) q = q.gte('date', from);
-    if (to)   q = q.lte('date', to);
+/* ── Lightweight: total expenses for a period (used in Ventas/Cierre) ──
+   businessDate: si se pasa, filtra por esa fecha exacta (fecha de sesión).
+   Útil para que 'hoy' use la fecha de la sesión del negocio, no el día calendario. */
+export async function fetchExpensesTotal(period, businessDate = null) {
+    let q = supabase.from('expenses').select('amount').eq('business_id', BUSINESS_ID);
+
+    if (businessDate) {
+        q = q.eq('date', businessDate);
+    } else {
+        const { from, to } = periodRange(period);
+        if (from) q = q.gte('date', from);
+        if (to)   q = q.lte('date', to);
+    }
+
     const { data } = await q;
     return (data ?? []).reduce((s, e) => s + Number(e.amount), 0);
 }

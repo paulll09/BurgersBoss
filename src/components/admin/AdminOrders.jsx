@@ -9,6 +9,8 @@ import {
 import { supabase } from '../../lib/supabase';
 import { BUSINESS_ID } from '../../lib/config';
 import { useOrders } from '../../hooks/useOrders';
+import { useProducts } from '../../hooks/useProducts';
+import { useExtras } from '../../hooks/useExtras';
 import { useConfirm } from '../ui/ConfirmDialog';
 import { printTicket } from '../../lib/printTicket';
 import { inputCls } from '../../utils/styles';
@@ -35,10 +37,13 @@ function formatCurrency(n) {
 /* ══════════════════════════════════════════════
    ORDER CARD
 ══════════════════════════════════════════════ */
-function OrderCard({ order, onConfirm, onCancel, onPrint }) {
-    const [expanded, setExpanded] = useState(true);
+function OrderCard({ order, onConfirm, onCancel, onPrint, onFinish }) {
+    const [expanded, setExpanded]         = useState(true);
+    const [confirmingFee, setConfirmingFee] = useState(false);
+    const [deliveryFee, setDeliveryFee]   = useState('');
     const isPending   = order.status === 'pending';
     const isConfirmed = order.status === 'confirmed';
+    const isDelivery  = order.order_type === 'delivery';
 
     const modeLabel = order.order_type === 'delivery' ? 'Delivery' : 'Retiro local';
     const payLabel  = { efectivo: 'Efectivo', transferencia: 'Transferencia' }[order.payment_method] ?? '';
@@ -128,6 +133,11 @@ function OrderCard({ order, onConfirm, onCancel, onPrint }) {
                                             {formatCurrency(item.price * item.quantity)}
                                         </span>
                                     </div>
+                                    {item.comboOptionName && (
+                                        <p className="font-body text-xs pl-4" style={{ color: '#2d6a2d', fontWeight: 600 }}>
+                                            › {item.comboOptionName}
+                                        </p>
+                                    )}
                                     {(item.extras ?? []).map((e, j) => (
                                         <p key={j} className="font-body text-xs pl-4" style={{ color: 'rgba(45,106,45,0.75)' }}>
                                             + {e.name}
@@ -170,9 +180,9 @@ function OrderCard({ order, onConfirm, onCancel, onPrint }) {
 
                                 <div className="flex-1" />
 
-                                {isPending && (
+                                {isPending && !confirmingFee && (
                                     <button
-                                        onClick={() => onConfirm(order.id)}
+                                        onClick={() => isDelivery ? setConfirmingFee(true) : onConfirm(order.id, 0)}
                                         className="cursor-pointer flex items-center gap-1.5 px-4 py-2 rounded-xl font-body text-sm font-bold uppercase tracking-wider transition-all active:scale-95 shadow-[0_4px_14px_rgba(45,106,45,0.28)]"
                                         style={{ background: G, color: '#fff' }}
                                     >
@@ -181,15 +191,55 @@ function OrderCard({ order, onConfirm, onCancel, onPrint }) {
                                     </button>
                                 )}
 
+                                {isPending && confirmingFee && (
+                                    <div className="flex items-center gap-2 flex-1">
+                                        <div className="relative flex-1">
+                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 font-body text-sm" style={{ color: '#888' }}>$</span>
+                                            <input
+                                                type="number" min="0" step="100"
+                                                value={deliveryFee}
+                                                onChange={e => setDeliveryFee(e.target.value)}
+                                                placeholder="Costo de envío"
+                                                autoFocus
+                                                className="w-full bg-white border border-[rgba(0,0,0,0.12)] rounded-xl pl-7 pr-3 py-2 text-[#111] text-sm focus:outline-none focus:border-[#2d6a2d] transition-all placeholder:text-[rgba(0,0,0,0.28)]"
+                                            />
+                                        </div>
+                                        <button
+                                            onClick={() => { onConfirm(order.id, parseFloat(deliveryFee) || 0); setConfirmingFee(false); setDeliveryFee(''); }}
+                                            className="cursor-pointer flex items-center gap-1 px-3 py-2 rounded-xl font-body text-sm font-bold uppercase tracking-wider transition-all active:scale-95 shrink-0 shadow-[0_4px_14px_rgba(45,106,45,0.28)]"
+                                            style={{ background: G, color: '#fff' }}
+                                        >
+                                            <Check className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => { setConfirmingFee(false); setDeliveryFee(''); }}
+                                            className="cursor-pointer p-2 rounded-xl transition-all active:scale-90 shrink-0"
+                                            style={{ color: '#555', border: '1px solid rgba(0,0,0,0.10)' }}
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                )}
+
                                 {isConfirmed && (
-                                    <button
-                                        onClick={() => onPrint(order)}
-                                        className="cursor-pointer flex items-center gap-1.5 px-4 py-2 rounded-xl font-body text-sm font-bold uppercase tracking-wider transition-all active:scale-95"
-                                        style={{ background: G_DARK, color: '#fff', boxShadow: '0 4px 14px rgba(26,74,26,0.35)' }}
-                                    >
-                                        <Printer className="w-4 h-4" />
-                                        Imprimir comanda
-                                    </button>
+                                    <>
+                                        <button
+                                            onClick={() => onFinish(order.id)}
+                                            className="cursor-pointer flex items-center gap-1.5 px-3 py-2 rounded-xl font-body text-xs font-semibold transition-all active:scale-95"
+                                            style={{ color: '#555', border: '1px solid rgba(0,0,0,0.10)' }}
+                                        >
+                                            <Check className="w-3.5 h-3.5" />
+                                            Finalizar
+                                        </button>
+                                        <button
+                                            onClick={() => onPrint(order)}
+                                            className="cursor-pointer flex items-center gap-1.5 px-4 py-2 rounded-xl font-body text-sm font-bold uppercase tracking-wider transition-all active:scale-95"
+                                            style={{ background: G_DARK, color: '#fff', boxShadow: '0 4px 14px rgba(26,74,26,0.35)' }}
+                                        >
+                                            <Printer className="w-4 h-4" />
+                                            Imprimir comanda
+                                        </button>
+                                    </>
                                 )}
                             </div>
                         </div>
@@ -203,7 +253,7 @@ function OrderCard({ order, onConfirm, onCancel, onPrint }) {
 /* ══════════════════════════════════════════════
    HISTORY ROW
 ══════════════════════════════════════════════ */
-function HistoryRow({ order, onReprint }) {
+function HistoryRow({ order, onReprint, onDelete }) {
     const statusColors = {
         printed:   { bg: 'rgba(45,106,45,0.08)',  text: G },
         cancelled: { bg: 'rgba(239,68,68,0.08)',  text: '#dc2626' },
@@ -247,6 +297,14 @@ function HistoryRow({ order, onReprint }) {
                     <Printer className="w-3.5 h-3.5" />
                 </button>
             )}
+            <button
+                onClick={() => onDelete(order)}
+                className="cursor-pointer p-2 rounded-lg transition-all active:scale-90"
+                style={{ color: '#dc2626', background: 'rgba(239,68,68,0.08)' }}
+                title="Eliminar pedido"
+            >
+                <Trash2 className="w-3.5 h-3.5" />
+            </button>
         </div>
     );
 }
@@ -254,7 +312,7 @@ function HistoryRow({ order, onReprint }) {
 /* ══════════════════════════════════════════════
    MANUAL ORDER MODAL
 ══════════════════════════════════════════════ */
-const EMPTY_ITEM = { name: '', quantity: 1, price: '' };
+const EMPTY_ITEM = { productId: '', variantId: '', name: '', variantName: '', quantity: 1, price: '', basePrice: 0, extras: [] };
 const EMPTY_FORM = {
     customer_name: '',
     order_type: 'pickup',
@@ -262,6 +320,7 @@ const EMPTY_FORM = {
     address: '',
     notes: '',
     overrideTotal: '',
+    delivery_fee: '',
 };
 
 function ManualOrderModal({ onClose, onCreate }) {
@@ -270,11 +329,55 @@ function ManualOrderModal({ onClose, onCreate }) {
     const [saving, setSaving]     = useState(false);
     const [useOverride, setUseOverride] = useState(false);
 
-    const autoTotal = items.reduce((s, it) => s + (parseFloat(it.price) || 0) * (parseInt(it.quantity) || 0), 0);
+    const { products, categories } = useProducts(true);
+    const { extras: allExtras }    = useExtras(true);
+
+    const itemsSubtotal = items.reduce((s, it) => s + (parseFloat(it.price) || 0) * (parseInt(it.quantity) || 0), 0);
+    const parsedDeliveryFee = form.order_type === 'delivery' ? (parseFloat(form.delivery_fee) || 0) : 0;
+    const autoTotal  = itemsSubtotal + parsedDeliveryFee;
     const finalTotal = useOverride && form.overrideTotal ? parseFloat(form.overrideTotal) || 0 : autoTotal;
 
-    const setItem = (i, field, value) =>
-        setItems(prev => prev.map((it, idx) => idx === i ? { ...it, [field]: value } : it));
+    const updateItem = (i, updates) =>
+        setItems(prev => prev.map((it, idx) => idx === i ? { ...it, ...updates } : it));
+
+    const handleProductChange = (i, productId) => {
+        const product = products.find(p => p.id === productId);
+        if (!product) { updateItem(i, { ...EMPTY_ITEM }); return; }
+        const firstVariant = product.product_variants?.[0];
+        const basePrice = Number(firstVariant?.price ?? product.price ?? 0);
+        updateItem(i, {
+            productId:   product.id,
+            name:        product.name,
+            variantId:   firstVariant?.id   ?? '',
+            variantName: firstVariant?.name ?? '',
+            basePrice,
+            extras:      [],
+            price:       String(basePrice),
+        });
+    };
+
+    const handleVariantChange = (i, variantId) => {
+        const product   = products.find(p => p.id === items[i].productId);
+        const variant   = product?.product_variants?.find(v => v.id === variantId);
+        const basePrice = Number(variant?.price ?? 0);
+        const extrasSum = items[i].extras.reduce((s, e) => s + Number(e.price), 0);
+        updateItem(i, {
+            variantId:   variantId,
+            variantName: variant?.name ?? '',
+            basePrice,
+            price:       String(basePrice + extrasSum),
+        });
+    };
+
+    const handleExtraToggle = (i, extra) => {
+        const item     = items[i];
+        const already  = item.extras.find(e => e.id === extra.id);
+        const newExtras = already
+            ? item.extras.filter(e => e.id !== extra.id)
+            : [...item.extras, { id: extra.id, name: extra.name, price: Number(extra.price) }];
+        const extrasSum = newExtras.reduce((s, e) => s + Number(e.price), 0);
+        updateItem(i, { extras: newExtras, price: String(item.basePrice + extrasSum) });
+    };
 
     const addItem = () => setItems(prev => [...prev, { ...EMPTY_ITEM }]);
     const removeItem = (i) => setItems(prev => prev.filter((_, idx) => idx !== i));
@@ -282,7 +385,7 @@ function ManualOrderModal({ onClose, onCreate }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!form.customer_name.trim()) { toast.error('El nombre es obligatorio'); return; }
-        if (items.every(it => !it.name.trim())) { toast.error('Agregá al menos un producto'); return; }
+        if (items.every(it => !it.name)) { toast.error('Agregá al menos un producto'); return; }
 
         setSaving(true);
         const payload = {
@@ -292,14 +395,16 @@ function ManualOrderModal({ onClose, onCreate }) {
             address: form.order_type === 'delivery' ? form.address.trim() || null : null,
             notes: form.notes.trim() || null,
             items: items
-                .filter(it => it.name.trim())
+                .filter(it => it.name)
                 .map(it => ({
-                    name: it.name.trim(),
-                    quantity: parseInt(it.quantity) || 1,
-                    price: parseFloat(it.price) || 0,
-                    extras: [],
+                    name:        it.name,
+                    variantName: it.variantName || null,
+                    quantity:    parseInt(it.quantity) || 1,
+                    price:       parseFloat(it.price) || 0,
+                    extras:      [],
                 })),
             total: finalTotal,
+            ...(parsedDeliveryFee > 0 ? { delivery_fee: parsedDeliveryFee } : {}),
         };
 
         const { data, error } = await onCreate(payload);
@@ -307,7 +412,6 @@ function ManualOrderModal({ onClose, onCreate }) {
         if (error) { toast.error(error.message); return; }
         toast.success(`Pedido #${padNum(data.order_number)} creado`);
         onClose();
-        if (data) printTicket(data);
     };
 
     return createPortal(
@@ -358,33 +462,105 @@ function ManualOrderModal({ onClose, onCreate }) {
                             <label className="font-body text-[10px] font-bold uppercase tracking-[0.22em] mb-2 block" style={{ color: G }}>
                                 Productos *
                             </label>
-                            <div className="flex flex-col gap-2">
-                                {items.map((item, i) => (
-                                    <div key={i} className="flex gap-2 items-center">
-                                        <input
-                                            type="text" value={item.name} placeholder="Nombre del producto"
-                                            onChange={e => setItem(i, 'name', e.target.value)}
-                                            className="flex-1 bg-white border border-[rgba(0,0,0,0.12)] rounded-xl px-3 py-2.5 text-[#111] text-sm focus:outline-none focus:border-[#2d6a2d] transition-all placeholder:text-[rgba(0,0,0,0.28)]"
-                                        />
-                                        <input
-                                            type="number" value={item.quantity} min="1" placeholder="Qty"
-                                            onChange={e => setItem(i, 'quantity', e.target.value)}
-                                            className="w-14 bg-white border border-[rgba(0,0,0,0.12)] rounded-xl px-2 py-2.5 text-[#111] text-sm text-center focus:outline-none focus:border-[#2d6a2d] transition-all"
-                                        />
-                                        <input
-                                            type="number" value={item.price} min="0" step="100" placeholder="$"
-                                            onChange={e => setItem(i, 'price', e.target.value)}
-                                            className="w-24 bg-white border border-[rgba(0,0,0,0.12)] rounded-xl px-2 py-2.5 text-[#111] text-sm focus:outline-none focus:border-[#2d6a2d] transition-all placeholder:text-[rgba(0,0,0,0.28)]"
-                                        />
-                                        {items.length > 1 && (
-                                            <button type="button" onClick={() => removeItem(i)}
-                                                className="cursor-pointer p-2 rounded-lg transition-all active:scale-90 shrink-0"
-                                                style={{ color: '#dc2626', background: 'rgba(239,68,68,0.08)' }}>
-                                                <Trash2 className="w-3.5 h-3.5" />
-                                            </button>
-                                        )}
-                                    </div>
-                                ))}
+                            <div className="flex flex-col gap-3">
+                                {items.map((item, i) => {
+                                    const selectedProduct = products.find(p => p.id === item.productId);
+                                    const hasVariants = (selectedProduct?.product_variants?.length ?? 0) > 0;
+                                    return (
+                                        <div key={i} className="flex flex-col gap-1.5 p-3 rounded-xl" style={{ background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.07)' }}>
+                                            {/* Row 1: selector + qty + price + delete */}
+                                            <div className="flex gap-2 items-center">
+                                                <select
+                                                    value={item.productId}
+                                                    onChange={e => handleProductChange(i, e.target.value)}
+                                                    className="flex-1 min-w-0 bg-white border border-[rgba(0,0,0,0.12)] rounded-xl px-3 py-2.5 text-[#111] text-sm focus:outline-none focus:border-[#2d6a2d] transition-all"
+                                                >
+                                                    <option value="">— Seleccioná un producto —</option>
+                                                    {categories.map(cat => {
+                                                        const catProducts = products.filter(p => p.category_id === cat.id);
+                                                        if (!catProducts.length) return null;
+                                                        return (
+                                                            <optgroup key={cat.id} label={cat.name}>
+                                                                {catProducts.map(p => (
+                                                                    <option key={p.id} value={p.id}>{p.name}</option>
+                                                                ))}
+                                                            </optgroup>
+                                                        );
+                                                    })}
+                                                </select>
+                                                <input
+                                                    type="number" value={item.quantity} min="1"
+                                                    onChange={e => updateItem(i, { quantity: e.target.value })}
+                                                    className="w-14 bg-white border border-[rgba(0,0,0,0.12)] rounded-xl px-2 py-2.5 text-[#111] text-sm text-center focus:outline-none focus:border-[#2d6a2d] transition-all"
+                                                />
+                                                <div className="relative w-24">
+                                                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm" style={{ color: '#888' }}>$</span>
+                                                    <input
+                                                        type="number" value={item.price} min="0" step="100"
+                                                        onChange={e => updateItem(i, { price: e.target.value })}
+                                                        className="w-full bg-white border border-[rgba(0,0,0,0.12)] rounded-xl pl-6 pr-2 py-2.5 text-[#111] text-sm focus:outline-none focus:border-[#2d6a2d] transition-all"
+                                                    />
+                                                </div>
+                                                {items.length > 1 && (
+                                                    <button type="button" onClick={() => removeItem(i)}
+                                                        className="cursor-pointer p-2 rounded-lg transition-all active:scale-90 shrink-0"
+                                                        style={{ color: '#dc2626', background: 'rgba(239,68,68,0.08)' }}>
+                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                            {/* Row 2: variant selector */}
+                                            {hasVariants && (
+                                                <select
+                                                    value={item.variantId}
+                                                    onChange={e => handleVariantChange(i, e.target.value)}
+                                                    className="w-full bg-white border border-[rgba(0,0,0,0.12)] rounded-xl px-3 py-2 text-[#111] text-sm focus:outline-none focus:border-[#2d6a2d] transition-all"
+                                                >
+                                                    {selectedProduct.product_variants.map(v => (
+                                                        <option key={v.id} value={v.id}>
+                                                            {v.name} — ${Number(v.price).toLocaleString('es-AR')}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            )}
+                                            {/* Row 3: extras disponibles para este producto */}
+                                            {selectedProduct && (() => {
+                                                const availableExtras = allExtras.filter(e =>
+                                                    !e.allowed_categories?.length ||
+                                                    e.allowed_categories.includes(selectedProduct.category_id)
+                                                );
+                                                if (!availableExtras.length) return null;
+                                                return (
+                                                    <div>
+                                                        <p className="font-body text-[10px] font-bold uppercase tracking-[0.18em] mb-1.5" style={{ color: 'rgba(0,0,0,0.38)' }}>
+                                                            Extras
+                                                        </p>
+                                                        <div className="flex flex-wrap gap-1.5">
+                                                            {availableExtras.map(extra => {
+                                                                const selected = item.extras.find(e => e.id === extra.id);
+                                                                return (
+                                                                    <button
+                                                                        key={extra.id}
+                                                                        type="button"
+                                                                        onClick={() => handleExtraToggle(i, extra)}
+                                                                        className="cursor-pointer px-2.5 py-1 rounded-full font-body text-xs font-semibold transition-all active:scale-95"
+                                                                        style={selected
+                                                                            ? { background: G, color: '#fff' }
+                                                                            : { background: 'rgba(0,0,0,0.06)', color: '#555' }
+                                                                        }
+                                                                    >
+                                                                        + {extra.name}
+                                                                        {Number(extra.price) > 0 && ` $${Number(extra.price).toLocaleString('es-AR')}`}
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
+                                        </div>
+                                    );
+                                })}
                                 <button type="button" onClick={addItem}
                                     className="cursor-pointer flex items-center gap-1.5 font-body text-xs font-semibold px-3 py-2 rounded-xl transition-all active:scale-95 self-start"
                                     style={{ color: G, background: 'rgba(45,106,45,0.08)' }}>
@@ -394,9 +570,24 @@ function ManualOrderModal({ onClose, onCreate }) {
                         </div>
 
                         {/* Total */}
-                        <div className="flex items-center justify-between px-4 py-3 rounded-xl" style={{ background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.07)' }}>
-                            <span className="font-body text-sm font-semibold" style={{ color: '#444' }}>Total calculado</span>
-                            <span className="font-display text-2xl leading-none" style={{ color: '#111' }}>{formatCurrency(autoTotal)}</span>
+                        <div className="flex flex-col gap-1 px-4 py-3 rounded-xl" style={{ background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.07)' }}>
+                            {parsedDeliveryFee > 0 && (
+                                <>
+                                    <div className="flex items-center justify-between">
+                                        <span className="font-body text-xs" style={{ color: '#888' }}>Subtotal productos</span>
+                                        <span className="font-body text-sm" style={{ color: '#888' }}>{formatCurrency(itemsSubtotal)}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="font-body text-xs" style={{ color: '#888' }}>Costo de envío</span>
+                                        <span className="font-body text-sm" style={{ color: '#888' }}>{formatCurrency(parsedDeliveryFee)}</span>
+                                    </div>
+                                    <div className="h-px my-0.5" style={{ background: 'rgba(0,0,0,0.08)' }} />
+                                </>
+                            )}
+                            <div className="flex items-center justify-between">
+                                <span className="font-body text-sm font-semibold" style={{ color: '#444' }}>Total calculado</span>
+                                <span className="font-display text-2xl leading-none" style={{ color: '#111' }}>{formatCurrency(autoTotal)}</span>
+                            </div>
                         </div>
 
                         {/* Override total */}
@@ -437,9 +628,21 @@ function ManualOrderModal({ onClose, onCreate }) {
                                 ))}
                             </div>
                             {form.order_type === 'delivery' && (
-                                <input type="text" value={form.address} placeholder="Dirección de envío"
-                                    onChange={e => setForm(p => ({ ...p, address: e.target.value }))}
-                                    className={`${inputCls} mt-2`} />
+                                <>
+                                    <input type="text" value={form.address} placeholder="Dirección de envío"
+                                        onChange={e => setForm(p => ({ ...p, address: e.target.value }))}
+                                        className={`${inputCls} mt-2`} />
+                                    <div className="relative mt-2">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 font-body text-sm" style={{ color: '#888' }}>$</span>
+                                        <input
+                                            type="number" min="0" step="100"
+                                            value={form.delivery_fee}
+                                            onChange={e => setForm(p => ({ ...p, delivery_fee: e.target.value }))}
+                                            placeholder="Costo de envío"
+                                            className={`${inputCls} pl-7`}
+                                        />
+                                    </div>
+                                </>
                             )}
                         </div>
 
@@ -503,10 +706,10 @@ export default function AdminOrders() {
     const {
         orders, loading,
         pendingCount, confirmedCount,
-        confirmOrder, cancelOrder, markPrinted, createManualOrder,
+        confirmOrder, cancelOrder, markPrinted, createManualOrder, deleteOrder,
     } = useOrders();
 
-    const [tab, setTab]           = useState('active');   // 'active' | 'history'
+    const [tab, setTab]           = useState('pending');  // 'pending' | 'confirmed' | 'history'
     const [manualOpen, setManualOpen] = useState(false);
     const [history, setHistory]   = useState([]);
     const [historyLoading, setHistoryLoading] = useState(false);
@@ -518,8 +721,9 @@ export default function AdminOrders() {
     /* ── Load history ── */
     const loadHistory = useCallback(async (date) => {
         setHistoryLoading(true);
-        const from = `${date}T00:00:00`;
-        const to   = `${date}T23:59:59`;
+        // Usar hora local → ISO UTC para que coincida con el timezone del negocio
+        const from = new Date(date + 'T00:00:00').toISOString();
+        const to   = new Date(date + 'T23:59:59.999').toISOString();
         const { data, error } = await supabase
             .from('orders')
             .select('*')
@@ -533,15 +737,15 @@ export default function AdminOrders() {
         setHistoryLoading(false);
     }, []);
 
-    const handleTabHistory = () => {
-        setTab('history');
-        loadHistory(historyDate);
+    const handleTabChange = (id) => {
+        setTab(id);
+        if (id === 'history') loadHistory(historyDate);
     };
 
     /* ── Handlers ── */
-    const handleConfirm = async (id) => {
-        const ok = await confirmOrder(id);
-        if (ok) toast.success('Pago confirmado');
+    const handleConfirm = async (id, deliveryFee = 0) => {
+        const ok = await confirmOrder(id, deliveryFee);
+        if (ok) toast.success('Pago confirmado — venta registrada');
         else toast.error('Error al confirmar');
     };
 
@@ -562,12 +766,32 @@ export default function AdminOrders() {
         await markPrinted(order.id);
     };
 
+    const handleFinish = async (id) => {
+        await markPrinted(id);
+    };
+
+    const handleDeleteHistory = async (order) => {
+        const ok2 = await confirm({
+            title: '¿Eliminar pedido?',
+            message: `El pedido #${padNum(order.order_number)} de ${order.customer_name} se eliminará permanentemente y no aparecerá en ventas ni reportes.`,
+            confirmText: 'Eliminar',
+        });
+        if (!ok2) return;
+        const ok = await deleteOrder(order.id);
+        if (ok) {
+            setHistory(prev => prev.filter(o => o.id !== order.id));
+            toast.success(`Pedido #${padNum(order.order_number)} eliminado`);
+        } else {
+            toast.error('Sin permiso para eliminar. Agregá una política DELETE en Supabase para la tabla orders.');
+        }
+    };
+
     const handleManualCreate = async (payload) => {
         return createManualOrder(payload);
     };
 
-    /* ── Empty active ── */
-    const isEmpty = !loading && orders.length === 0;
+    const pendingOrders   = orders.filter(o => o.status === 'pending');
+    const confirmedOrders = orders.filter(o => o.status === 'confirmed');
 
     return (
         <div className="max-w-2xl mx-auto animate-fade-up pb-10">
@@ -582,7 +806,7 @@ export default function AdminOrders() {
                         {pendingCount > 0
                             ? `${pendingCount} pendiente${pendingCount > 1 ? 's' : ''} de pago`
                             : confirmedCount > 0
-                            ? `${confirmedCount} listo${confirmedCount > 1 ? 's' : ''} para imprimir`
+                            ? `${confirmedCount} cobrado${confirmedCount > 1 ? 's' : ''}`
                             : 'Sin pedidos activos'
                         }
                     </p>
@@ -604,24 +828,25 @@ export default function AdminOrders() {
                 style={{ background: 'rgba(0,0,0,0.05)' }}
             >
                 {[
-                    { id: 'active',  label: `Activos${orders.length > 0 ? ` (${orders.length})` : ''}`, icon: ShoppingBag },
-                    { id: 'history', label: 'Historial', icon: History },
+                    { id: 'pending',   label: `Pendientes${pendingCount > 0 ? ` (${pendingCount})` : ''}`,     icon: Clock },
+                    { id: 'confirmed', label: `Cobrados${confirmedCount > 0 ? ` (${confirmedCount})` : ''}`,   icon: Check },
+                    { id: 'history',   label: 'Historial', icon: History },
                 ].map(({ id, label, icon: Icon }) => (
                     <button key={id}
-                        onClick={() => id === 'history' ? handleTabHistory() : setTab('active')}
-                        className="cursor-pointer flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg font-body text-sm font-semibold transition-all"
+                        onClick={() => handleTabChange(id)}
+                        className="cursor-pointer flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg font-body text-xs font-semibold transition-all"
                         style={tab === id
                             ? { background: '#fff', color: '#111', boxShadow: '0 1px 4px rgba(0,0,0,0.10)' }
                             : { color: '#555' }
                         }
                     >
-                        <Icon className="w-4 h-4" />{label}
+                        <Icon className="w-3.5 h-3.5" />{label}
                     </button>
                 ))}
             </div>
 
-            {/* ── ACTIVE TAB ── */}
-            {tab === 'active' && (
+            {/* ── PENDIENTES TAB ── */}
+            {tab === 'pending' && (
                 <>
                     {loading ? (
                         <div className="flex flex-col gap-3">
@@ -629,28 +854,53 @@ export default function AdminOrders() {
                                 <div key={i} className="h-28 rounded-2xl bg-white animate-pulse" style={{ border: '1px solid rgba(0,0,0,0.07)' }} />
                             ))}
                         </div>
-                    ) : isEmpty ? (
+                    ) : pendingOrders.length === 0 ? (
                         <div className="py-20 flex flex-col items-center gap-3 text-center">
                             <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.05)' }}>
                                 <Clock className="w-6 h-6" style={{ color: '#666' }} />
                             </div>
-                            <p className="font-display uppercase text-2xl leading-none" style={{ color: '#666' }}>
-                                Sin pedidos activos
-                            </p>
-                            <p className="font-body text-sm" style={{ color: '#555' }}>
-                                Los pedidos web aparecen aquí en tiempo real.
-                            </p>
+                            <p className="font-display uppercase text-2xl leading-none" style={{ color: '#666' }}>Sin pendientes</p>
+                            <p className="font-body text-sm" style={{ color: '#555' }}>Los pedidos web aparecen aquí en tiempo real.</p>
                         </div>
                     ) : (
                         <AnimatePresence>
                             <div className="flex flex-col gap-3">
-                                {orders.map(order => (
-                                    <OrderCard
-                                        key={order.id}
-                                        order={order}
-                                        onConfirm={handleConfirm}
-                                        onCancel={handleCancel}
-                                        onPrint={handlePrint}
+                                {pendingOrders.map(order => (
+                                    <OrderCard key={order.id} order={order}
+                                        onConfirm={handleConfirm} onCancel={handleCancel}
+                                        onPrint={handlePrint} onFinish={handleFinish}
+                                    />
+                                ))}
+                            </div>
+                        </AnimatePresence>
+                    )}
+                </>
+            )}
+
+            {/* ── COBRADOS TAB ── */}
+            {tab === 'confirmed' && (
+                <>
+                    {loading ? (
+                        <div className="flex flex-col gap-3">
+                            {[...Array(2)].map((_, i) => (
+                                <div key={i} className="h-28 rounded-2xl bg-white animate-pulse" style={{ border: '1px solid rgba(0,0,0,0.07)' }} />
+                            ))}
+                        </div>
+                    ) : confirmedOrders.length === 0 ? (
+                        <div className="py-20 flex flex-col items-center gap-3 text-center">
+                            <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.05)' }}>
+                                <Check className="w-6 h-6" style={{ color: '#666' }} />
+                            </div>
+                            <p className="font-display uppercase text-2xl leading-none" style={{ color: '#666' }}>Sin cobrados</p>
+                            <p className="font-body text-sm" style={{ color: '#555' }}>Los pedidos confirmados aparecen aquí.</p>
+                        </div>
+                    ) : (
+                        <AnimatePresence>
+                            <div className="flex flex-col gap-3">
+                                {confirmedOrders.map(order => (
+                                    <OrderCard key={order.id} order={order}
+                                        onConfirm={handleConfirm} onCancel={handleCancel}
+                                        onPrint={handlePrint} onFinish={handleFinish}
                                     />
                                 ))}
                             </div>
@@ -686,7 +936,7 @@ export default function AdminOrders() {
                         </p>
                     ) : (
                         history.map(order => (
-                            <HistoryRow key={order.id} order={order} onReprint={printTicket} />
+                            <HistoryRow key={order.id} order={order} onReprint={printTicket} onDelete={handleDeleteHistory} />
                         ))
                     )}
                 </div>

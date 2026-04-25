@@ -16,8 +16,8 @@
 
   /* ── Text ───────────────────────────────── */
   --color-text:       #111111;
-  --color-text-muted: rgba(0, 0, 0, 0.50);
-  --color-text-dim:   rgba(0, 0, 0, 0.28);
+  --color-text-muted: rgba(0, 0, 0, 0.62);
+  --color-text-dim:   rgba(0, 0, 0, 0.46);
 
   /* ── Accents ────────────────────────────── */
   --color-green-bright: #2d6a2d;
@@ -29,7 +29,7 @@
   --color-card:         #f7f7f5;
   --color-surface-light:#f0efed;
   --color-accent:       #2d6a2d;
-  --color-text-light:   rgba(0, 0, 0, 0.40);
+  --color-text-light:   rgba(0, 0, 0, 0.54);
 }
 
 /* ── Base ─────────────────────────────────── */
@@ -53,7 +53,7 @@ body {
   font-family: 'DM Sans', system-ui, sans-serif;
   font-size: 15px;
   line-height: 1.6;
-  overflow-x: hidden;
+  overflow-x: clip;
   overscroll-behavior-y: contain;
   -webkit-tap-highlight-color: transparent;
   overflow-anchor: none;
@@ -89,7 +89,7 @@ button, a, [role="button"] {
 /* ── Evitar overflow horizontal global ─ */
 body, #root {
   max-width: 100vw;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* ── Typography ───────────────────────────── */
@@ -125,12 +125,12 @@ body, #root {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.18em;
-  color: rgba(0, 0, 0, 0.52);
+  color: rgba(0, 0, 0, 0.65);
 }
 .admin-sub {
   font-family: 'DM Sans', system-ui, sans-serif;
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.55);
+  color: rgba(0, 0, 0, 0.68);
 }
 .admin-card {
   background: #ffffff;
@@ -573,15 +573,11 @@ body, #root {
   opacity: 0.78;
 }
 
-/* ── BOSS watermark — iOS-safe fixed bg ─────── */
+/* ── BOSS watermark — scroll en todos los dispositivos ─────────
+   (background-attachment: fixed causa repaint full-screen en cada
+   frame de scroll en Android Chrome/Samsung — jank severo) */
 .boss-watermark {
-  background-attachment: fixed;
-}
-@supports (-webkit-touch-callout: none) {
-  /* iOS Safari no soporta background-attachment: fixed correctamente */
-  .boss-watermark {
-    background-attachment: scroll;
-  }
+  background-attachment: scroll;
 }
 
 /* ── Footer Instagram link hover ─────────── */

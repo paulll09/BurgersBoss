@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-    Wallet, Banknote, CreditCard, TrendingDown,
-    ShoppingBag, CheckCircle2, ChevronDown, ChevronUp, ClipboardList,
+    Wallet, Banknote, CreditCard, TrendingDown, TrendingUp,
+    ShoppingBag, CheckCircle2, ChevronDown, ChevronUp, ClipboardList, Trash2,
 } from 'lucide-react';
 import { useCierreCaja, todayStr } from '../../hooks/useCierreCaja';
 import { useConfirm } from '../ui/ConfirmDialog';
@@ -54,9 +54,9 @@ function MetricCard({ label, icon: Icon, value, valueText, accent, highlight }) 
 }
 
 /* ── Fila de historial ───────────────────────── */
-function HistoryRow({ cierre }) {
+function HistoryRow({ cierre, businessDate }) {
     const [open, setOpen] = useState(false);
-    const isToday = cierre.fecha === todayStr();
+    const isToday = cierre.fecha === businessDate;
 
     return (
         <div className="rounded-xl overflow-hidden" style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.08)' }}>
@@ -138,10 +138,10 @@ function HistoryRow({ cierre }) {
 function SummaryGrid({ data, pedidos }) {
     return (
         <div className="grid grid-cols-2 gap-3">
-            <MetricCard label="Efectivo"      icon={Banknote}    value={data.ventas_efectivo} />
-            <MetricCard label="Transferencia" icon={CreditCard}  value={data.ventas_transferencia} />
+            <MetricCard label="Efectivo"      icon={Banknote}     value={data.ventas_efectivo} />
+            <MetricCard label="Transferencia" icon={CreditCard}   value={data.ventas_transferencia} />
             <MetricCard label="Gastos"        icon={TrendingDown} value={data.total_gastos} accent="#dc2626" />
-            <MetricCard label="Pedidos"       icon={ShoppingBag} valueText={String(pedidos ?? data.pedidos_count)} />
+            <MetricCard label="Pedidos"       icon={ShoppingBag}  valueText={String(pedidos ?? data.pedidos_count)} />
             <div className="col-span-2">
                 <MetricCard
                     label="Saldo en caja"
@@ -159,7 +159,7 @@ function SummaryGrid({ data, pedidos }) {
 ══════════════════════════════════════════════ */
 export default function AdminCierreCaja() {
     const confirm = useConfirm();
-    const { summary, cierreHoy, history, loading, createCierre } = useCierreCaja();
+    const { summary, cierreHoy, history, loading, createCierre, deleteCierre, businessDate } = useCierreCaja();
     const [notas,  setNotas]  = useState('');
     const [saving, setSaving] = useState(false);
 
@@ -181,7 +181,7 @@ export default function AdminCierreCaja() {
         else toast.success('Caja cerrada correctamente');
     };
 
-    const historyPrev = history.filter(c => c.fecha !== todayStr());
+    const historyPrev = history.filter(c => c.fecha !== businessDate);
 
     return (
         <div className="max-w-2xl mx-auto animate-fade-up pb-10">
@@ -213,12 +213,30 @@ export default function AdminCierreCaja() {
                                 style={{ background: 'rgba(45,106,45,0.08)', border: '1.5px solid rgba(45,106,45,0.22)' }}
                             >
                                 <CheckCircle2 className="w-5 h-5 shrink-0" style={{ color: G }} />
-                                <div>
+                                <div className="flex-1">
                                     <p className="font-body text-sm font-bold" style={{ color: G }}>Caja cerrada</p>
                                     <p className="font-body text-xs" style={{ color: '#555' }}>
                                         Registrada a las {fmtTime(cierreHoy.closed_at)}
                                     </p>
                                 </div>
+                                <button
+                                    onClick={async () => {
+                                        const ok = await confirm({
+                                            title: '¿Eliminar cierre?',
+                                            message: 'Esto borra el cierre registrado y te permite volver a cerrar la caja.',
+                                            confirmText: 'Eliminar',
+                                        });
+                                        if (!ok) return;
+                                        const { error } = await deleteCierre(cierreHoy.id);
+                                        if (error) toast.error('Error al eliminar');
+                                        else toast.success('Cierre eliminado');
+                                    }}
+                                    className="cursor-pointer p-2 rounded-xl transition-all active:scale-90 shrink-0"
+                                    style={{ color: '#dc2626', background: 'rgba(239,68,68,0.08)' }}
+                                    title="Eliminar cierre"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
                             </div>
 
                             <SummaryGrid data={cierreHoy} pedidos={cierreHoy.pedidos_count} />
@@ -270,7 +288,7 @@ export default function AdminCierreCaja() {
                                 </h2>
                             </div>
                             <div className="flex flex-col gap-2">
-                                {historyPrev.map(c => <HistoryRow key={c.id} cierre={c} />)}
+                                {historyPrev.map(c => <HistoryRow key={c.id} cierre={c} businessDate={businessDate} />)}
                             </div>
                         </div>
                     )}

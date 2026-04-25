@@ -2,29 +2,28 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { BUSINESS_ID } from '../lib/config';
 import { fetchExpensesTotal } from './useExpenses';
+import { getBusinessDayStart, getBusinessDayDate, fetchScheduleOnce } from './useSchedule';
 
+/* Kept for backwards-compat — components should prefer the hook's businessDate field */
 export function todayStr() {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function todayRange() {
-    const now = new Date();
-    const start = new Date(now); start.setHours(0, 0, 0, 0);
-    const end   = new Date(now); end.setHours(23, 59, 59, 999);
-    return { start: start.toISOString(), end: end.toISOString() };
-}
-
 export function useCierreCaja() {
-    const [summary,   setSummary]   = useState(null);
-    const [cierreHoy, setCierreHoy] = useState(null);
-    const [history,   setHistory]   = useState([]);
-    const [loading,   setLoading]   = useState(true);
+    const [summary,      setSummary]      = useState(null);
+    const [cierreHoy,    setCierreHoy]    = useState(null);
+    const [history,      setHistory]      = useState([]);
+    const [loading,      setLoading]      = useState(true);
+    const [businessDate, setBusinessDate] = useState(todayStr);
 
     const fetch = useCallback(async () => {
         setLoading(true);
-        const { start, end } = todayRange();
-        const fecha = todayStr();
+        const schedule = await fetchScheduleOnce();
+        const start    = getBusinessDayStart(schedule);
+        const fecha    = getBusinessDayDate(schedule);
+        setBusinessDate(fecha);
+        const end      = new Date().toISOString();
 
         const [
             { data: orders },
@@ -34,12 +33,12 @@ export function useCierreCaja() {
         ] = await Promise.all([
             supabase
                 .from('orders')
-                .select('total, payment_method')
+                .select('total, delivery_fee, payment_method')
                 .eq('business_id', BUSINESS_ID)
                 .in('status', ['confirmed', 'printed'])
-                .gte('created_at', start)
+                .gte('created_at', start.toISOString())
                 .lte('created_at', end),
-            fetchExpensesTotal('today'),
+            fetchExpensesTotal('today', fecha),
             supabase
                 .from('cierres_caja')
                 .select('*')
@@ -55,16 +54,17 @@ export function useCierreCaja() {
         ]);
 
         const ords = orders ?? [];
-        const ventas_efectivo       = ords.filter(o => o.payment_method === 'efectivo').reduce((s, o) => s + Number(o.total), 0);
-        const ventas_transferencia  = ords.filter(o => o.payment_method === 'transferencia').reduce((s, o) => s + Number(o.total), 0);
+        const productoTotal = o => Number(o.total) - Number(o.delivery_fee || 0);
+        const ventas_efectivo      = ords.filter(o => o.payment_method === 'efectivo').reduce((s, o) => s + productoTotal(o), 0);
+        const ventas_transferencia = ords.filter(o => o.payment_method === 'transferencia').reduce((s, o) => s + productoTotal(o), 0);
 
         setSummary({
             ventas_efectivo,
             ventas_transferencia,
-            total_ventas:  ventas_efectivo + ventas_transferencia,
-            total_gastos:  totalGastos,
+            total_ventas:   ventas_efectivo + ventas_transferencia,
+            total_gastos:   totalGastos,
             saldo_efectivo: ventas_efectivo - totalGastos,
-            pedidos_count: ords.length,
+            pedidos_count:  ords.length,
         });
         setCierreHoy(cierreData);
         setHistory(historyData ?? []);
@@ -76,7 +76,7 @@ export function useCierreCaja() {
     const createCierre = async (notas) => {
         const payload = {
             business_id:          BUSINESS_ID,
-            fecha:                todayStr(),
+            fecha:                businessDate,
             ventas_efectivo:      summary.ventas_efectivo,
             ventas_transferencia: summary.ventas_transferencia,
             total_ventas:         summary.total_ventas,
@@ -97,5 +97,17 @@ export function useCierreCaja() {
         return { data, error };
     };
 
-    return { summary, cierreHoy, history, loading, refetch: fetch, createCierre };
+    const deleteCierre = async (id) => {
+        const { error } = await supabase
+            .from('cierres_caja')
+            .delete()
+            .eq('id', id);
+        if (!error) {
+            setCierreHoy(null);
+            setHistory(prev => prev.filter(c => c.id !== id));
+        }
+        return { error };
+    };
+
+    return { summary, cierreHoy, history, loading, refetch: fetch, createCierre, deleteCierre, businessDate };
 }

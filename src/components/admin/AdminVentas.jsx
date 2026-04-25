@@ -122,11 +122,19 @@ function SplitRow({ label, count, total, color }) {
 /* ════════════════════════════════════════════
    ADMIN VENTAS
 ════════════════════════════════════════════ */
-const PERIODS    = [{ id: 'today', label: 'Hoy' }, { id: 'week', label: 'Semana' }, { id: 'month', label: 'Mes' }];
-const CHART_LABEL = { today: 'Ventas por hora', week: 'Ventas por día', month: 'Ventas por día del mes' };
+const PERIODS     = [{ id: 'today', label: 'Hoy' }, { id: 'week', label: 'Semana' }, { id: 'month', label: 'Mes' }, { id: 'date', label: 'Fecha' }];
+const CHART_LABEL = { today: 'Ventas por hora', week: 'Ventas por día', month: 'Ventas por día del mes', date: 'Ventas por hora' };
+
+function todayStr() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
 
 export default function AdminVentas() {
-    const [period, setPeriod] = useState('today');
+    const [tab, setTab]         = useState('today');   // 'today' | 'week' | 'month' | 'date'
+    const [customDate, setCustomDate] = useState(todayStr);
+
+    const period = tab === 'date' ? customDate : tab;
     const { data, loading, refetch } = useVentas(period);
 
     return (
@@ -150,13 +158,13 @@ export default function AdminVentas() {
             </div>
 
             {/* Period selector */}
-            <div className="flex gap-1 p-1 rounded-xl mb-6" style={{ background: 'rgba(0,0,0,0.08)' }}>
+            <div className="flex gap-1 p-1 rounded-xl mb-3" style={{ background: 'rgba(0,0,0,0.08)' }}>
                 {PERIODS.map(p => (
                     <button
                         key={p.id}
-                        onClick={() => setPeriod(p.id)}
+                        onClick={() => setTab(p.id)}
                         className="cursor-pointer flex-1 py-2 rounded-lg font-body text-sm font-semibold transition-all"
-                        style={period === p.id
+                        style={tab === p.id
                             ? { background: '#fff', color: '#111', boxShadow: '0 1px 4px rgba(0,0,0,0.12)' }
                             : { color: 'rgba(0,0,0,0.50)' }
                         }
@@ -165,6 +173,24 @@ export default function AdminVentas() {
                     </button>
                 ))}
             </div>
+
+            {/* Date picker — solo visible en tab "Fecha" */}
+            {tab === 'date' && (
+                <div className="flex items-center gap-3 mb-4">
+                    <input
+                        type="date"
+                        value={customDate}
+                        max={todayStr()}
+                        onChange={e => setCustomDate(e.target.value)}
+                        className="bg-white border border-[rgba(0,0,0,0.12)] rounded-xl px-3 py-2.5 text-[#111] text-sm focus:outline-none focus:border-[#2d6a2d] transition-all"
+                    />
+                    <p className="font-body text-xs" style={{ color: 'rgba(0,0,0,0.45)' }}>
+                        Ventas del día seleccionado
+                    </p>
+                </div>
+            )}
+
+            {tab !== 'date' && <div className="mb-4" />}
 
             {loading ? (
                 <div className="flex flex-col gap-4">
@@ -176,16 +202,18 @@ export default function AdminVentas() {
             ) : (
                 <>
                     {/* KPIs */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-                        <KpiCard label="Facturado" value={fmt(data?.totalRevenue ?? 0)} highlight />
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+                        <KpiCard label="Facturado (productos)" value={fmt(data?.totalRevenue ?? 0)} highlight />
+                        <KpiCard label="Total envíos" value={fmt(data?.totalDelivery ?? 0)} />
                         <KpiCard label="Pedidos" value={data?.orderCount ?? 0} />
-                        <KpiCard label="Ticket prom." value={data?.orderCount > 0 ? fmt(data.avgTicket) : '—'} />
+                    </div>
+                    <div className="mb-4">
                         <VsBadge pct={data?.pct ?? null} />
                     </div>
 
                     {/* Bar chart */}
                     <div className="admin-card p-5 mb-4">
-                        <p className="admin-label mb-4">{CHART_LABEL[period]}</p>
+                        <p className="admin-label mb-4">{CHART_LABEL[tab] ?? 'Ventas por hora'}</p>
                         <div style={{ overflowY: period === 'month' ? 'auto' : undefined, maxHeight: period === 'month' ? '320px' : undefined }}>
                             <BarChart items={data?.byTime ?? []} />
                         </div>
@@ -196,7 +224,7 @@ export default function AdminVentas() {
                         <p className="admin-label mb-3">Resultado del período</p>
                         <div className="flex flex-col gap-2">
                             <div className="flex items-center justify-between">
-                                <span className="font-body text-sm" style={{ color: 'rgba(0,0,0,0.55)' }}>Facturado</span>
+                                <span className="font-body text-sm" style={{ color: 'rgba(0,0,0,0.55)' }}>Productos y extras</span>
                                 <span className="font-body text-sm font-semibold" style={{ color: '#111' }}>{fmt(data?.totalRevenue ?? 0)}</span>
                             </div>
                             <div className="flex items-center justify-between">

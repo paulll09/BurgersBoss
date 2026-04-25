@@ -11,11 +11,14 @@ const FOREST = '#1a4a1a';
 export default function ProductModal({ product, extras, onClose }) {
     const addBurger = useCartStore(s => s.addBurger);
 
-    const variants    = product.product_variants || [];
-    const hasVariants = variants.length > 0;
+    const variants        = product.product_variants || [];
+    const hasVariants     = variants.length > 0;
+    const comboOptions    = product.combo_options || [];
+    const hasComboOptions = comboOptions.length > 0;
 
-    const [selectedVariant, setSelectedVariant] = useState(hasVariants ? variants[0] : null);
-    const [selectedExtras,  setSelectedExtras]  = useState([]);
+    const [selectedVariant,     setSelectedVariant]     = useState(hasVariants ? variants[0] : null);
+    const [selectedExtras,      setSelectedExtras]      = useState([]);
+    const [selectedComboOption, setSelectedComboOption] = useState(null);
 
     /* Scroll lock */
     useEffect(() => {
@@ -40,7 +43,8 @@ export default function ProductModal({ product, extras, onClose }) {
 
     const handleAdd = () => {
         if (hasVariants && !selectedVariant) { toast.error('Elegí una variante'); return; }
-        addBurger(product, selectedVariant, selectedExtras);
+        if (hasComboOptions && !selectedComboOption) { toast.error('Elegí una opción del combo'); return; }
+        addBurger(product, selectedVariant, selectedExtras, selectedComboOption);
         toast.success(`${product.name} agregado al pedido`);
         onClose();
     };
@@ -166,6 +170,46 @@ export default function ProductModal({ product, extras, onClose }) {
                                             <span className="font-display" style={{ fontSize: '1.15rem', color: selected ? FOREST : '#333' }}>
                                                 ${price.toLocaleString('es-AR')}
                                             </span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Opciones del combo */}
+                    {hasComboOptions && (
+                        <div style={{ marginBottom: 24 }}>
+                            <p className="font-body" style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.20em', color: 'rgba(0,0,0,0.40)', textTransform: 'uppercase', marginBottom: 4 }}>
+                                Elegí tu opción <span style={{ color: '#dc2626', fontWeight: 700 }}>*</span>
+                            </p>
+                            <p className="font-body" style={{ fontSize: '0.72rem', color: 'rgba(0,0,0,0.35)', marginBottom: 10 }}>Obligatorio — elegí una</p>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                {comboOptions.map(o => {
+                                    const selected = selectedComboOption?.id === o.id;
+                                    return (
+                                        <button
+                                            key={o.id}
+                                            onClick={() => setSelectedComboOption(o)}
+                                            style={{
+                                                display: 'flex', alignItems: 'center',
+                                                padding: '12px 14px', borderRadius: 14,
+                                                border: `2px solid ${selected ? FOREST : 'rgba(0,0,0,0.10)'}`,
+                                                background: selected ? 'rgba(26,74,26,0.05)' : '#fff',
+                                                cursor: 'pointer', transition: 'all 0.15s ease',
+                                                gap: 10,
+                                            }}
+                                        >
+                                            <div style={{
+                                                width: 18, height: 18, borderRadius: '50%', flexShrink: 0,
+                                                border: `2px solid ${selected ? FOREST : 'rgba(0,0,0,0.22)'}`,
+                                                background: selected ? FOREST : 'transparent',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                transition: 'all 0.15s ease',
+                                            }}>
+                                                {selected && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#fff' }} />}
+                                            </div>
+                                            <span className="font-body" style={{ fontWeight: 600, color: '#111', fontSize: '0.95rem' }}>{o.name}</span>
                                         </button>
                                     );
                                 })}

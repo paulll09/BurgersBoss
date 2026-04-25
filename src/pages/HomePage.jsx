@@ -249,9 +249,7 @@ export default function HomePage() {
                                 {...(href ? { href, target: '_blank', rel: 'noopener noreferrer' } : {})}
                                 className="flex items-center gap-5 px-6 py-7"
                                 style={{
-                                    background: 'rgba(245,240,232,0.72)',
-                                    backdropFilter: 'blur(10px)',
-                                    WebkitBackdropFilter: 'blur(10px)',
+                                    background: 'rgba(245,240,232,0.96)',
                                     borderTop: i > 0 ? '1px solid rgba(0,0,0,0.08)' : 'none',
                                     textDecoration: 'none',
                                     cursor: href ? 'pointer' : 'default',

@@ -38,10 +38,21 @@ export function useOrders() {
         return () => supabase.removeChannel(channel);
     }, [fetchOrders]);
 
-    const confirmOrder = useCallback(async (id) => {
+    const confirmOrder = useCallback(async (id, deliveryFee = 0) => {
+        const updates = {
+            status: 'confirmed',
+            confirmed_at: new Date().toISOString(),
+            expires_at: null,
+        };
+        if (deliveryFee > 0) {
+            const { data: current } = await supabase
+                .from('orders').select('total').eq('id', id).single();
+            updates.delivery_fee = deliveryFee;
+            updates.total = (current?.total ?? 0) + deliveryFee;
+        }
         const { error } = await supabase
             .from('orders')
-            .update({ status: 'confirmed', confirmed_at: new Date().toISOString() })
+            .update(updates)
             .eq('id', id);
         return !error;
     }, []);
@@ -52,6 +63,16 @@ export function useOrders() {
             .update({ status: 'cancelled' })
             .eq('id', id);
         return !error;
+    }, []);
+
+    const deleteOrder = useCallback(async (id) => {
+        const { data, error } = await supabase
+            .from('orders')
+            .delete()
+            .eq('id', id)
+            .select('id');
+        if (error) return false;
+        return Array.isArray(data) && data.length > 0;
     }, []);
 
     const markPrinted = useCallback(async (id) => {
@@ -70,6 +91,7 @@ export function useOrders() {
                 source: 'manual',
                 status: 'confirmed',
                 confirmed_at: new Date().toISOString(),
+                expires_at: null,
                 ...payload,
             })
             .select('*')
@@ -84,7 +106,7 @@ export function useOrders() {
         orders, loading,
         pendingCount, confirmedCount,
         activeCount: orders.length,
-        confirmOrder, cancelOrder, markPrinted, createManualOrder,
+        confirmOrder, cancelOrder, markPrinted, createManualOrder, deleteOrder,
         refetch: fetchOrders,
     };
 }
@@ -99,7 +121,7 @@ export function useOrdersCount() {
             .from('orders')
             .select('*', { count: 'exact', head: true })
             .eq('business_id', BUSINESS_ID)
-            .in('status', ACTIVE_STATUSES)
+            .eq('status', 'pending')
             .or(`expires_at.is.null,expires_at.gt.${now}`);
         setCount(c ?? 0);
     }, []);

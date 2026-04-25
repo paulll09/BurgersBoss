@@ -43,6 +43,7 @@ export default function Menu({ products, categories, loading, error, refetch }) 
     const isProgrammaticScroll = useRef(false);
     const scrollTimer           = useRef(null);
 
+
     /* Agrupar productos por category_id */
     const grouped = useMemo(() => {
         const map = {};
@@ -69,33 +70,45 @@ export default function Menu({ products, categories, loading, error, refetch }) 
         }
     }, [visibleSections, activeSection]);
 
-    /* Scroll tracking — rAF throttled */
+    /* Scroll tracking — IntersectionObserver.
+       Selección: la sección cuyo top más recientemente cruzó la barra sticky.
+       rootMargin: excluye los 52px del nav (-52px top) y el 40% inferior del viewport. */
     useEffect(() => {
         if (!visibleSections.length) return;
-        let ticking = false;
 
-        const computeActive = () => {
-            ticking = false;
-            if (isProgrammaticScroll.current) return;
-            const trigger = (window.visualViewport?.height ?? window.innerHeight) * 0.35;
-            let best = null, bestDist = Infinity;
-            for (const s of visibleSections) {
-                const el = sectionRefs.current[s.id];
-                if (!el) continue;
-                const rect = el.getBoundingClientRect();
-                const vh = window.visualViewport?.height ?? window.innerHeight;
-                if (rect.bottom < 0 || rect.top > vh) continue;
-                const dist = Math.abs(rect.top - trigger);
-                if (dist < bestDist) { bestDist = dist; best = s.id; }
-            }
-            if (best) setActiveSection(prev => prev === best ? prev : best);
-        };
+        const NAV_HEIGHT = 52;
 
-        const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(computeActive); } };
-        window.addEventListener('scroll', onScroll, { passive: true });
-        computeActive();
-        return () => window.removeEventListener('scroll', onScroll);
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (isProgrammaticScroll.current) return;
+                const intersecting = entries.filter(e => e.isIntersecting);
+                if (intersecting.length === 0) return;
+
+                const best = intersecting.reduce((a, b) => {
+                    const aTop = a.boundingClientRect.top;
+                    const bTop = b.boundingClientRect.top;
+                    // Ambas cruzaron la barra: la que más recientemente la cruzó (top mayor ≤ NAV_HEIGHT)
+                    if (aTop <= NAV_HEIGHT && bTop <= NAV_HEIGHT) return aTop > bTop ? a : b;
+                    if (aTop <= NAV_HEIGHT) return a;
+                    if (bTop <= NAV_HEIGHT) return b;
+                    // Ninguna cruzó todavía: la más cercana a la barra
+                    return aTop < bTop ? a : b;
+                });
+
+                const id = best.target.dataset.sectionId;
+                if (id) setActiveSection(prev => prev === id ? prev : id);
+            },
+            { rootMargin: '-52px 0px -40% 0px', threshold: 0 }
+        );
+
+        visibleSections.forEach(s => {
+            const el = sectionRefs.current[s.id];
+            if (el) observer.observe(el);
+        });
+
+        return () => observer.disconnect();
     }, [visibleSections]);
+
 
     /* Sliding pill */
     useEffect(() => {
@@ -113,8 +126,7 @@ export default function Menu({ products, categories, loading, error, refetch }) 
         isProgrammaticScroll.current = true;
         if (scrollTimer.current) clearTimeout(scrollTimer.current);
         setActiveSection(sectionId);
-        const tabsEl = tabsRef.current?.parentElement;
-        const tabsHeight = tabsEl ? tabsEl.offsetHeight : 44;
+        const tabsHeight = tabsRef.current?.parentElement?.offsetHeight ?? 44;
         const top = el.getBoundingClientRect().top + window.scrollY - tabsHeight - 8;
         window.scrollTo({ top, behavior: 'smooth' });
         scrollTimer.current = setTimeout(() => { isProgrammaticScroll.current = false; }, 900);
@@ -143,46 +155,45 @@ export default function Menu({ products, categories, loading, error, refetch }) 
                 </p>
             </motion.div>
 
-            {/* ── Tabs de sección — solo cuando hay más de una ── */}
-            {visibleSections.length > 1 && <div
-                className="sticky z-40 backdrop-blur-md"
-                style={{ top: 0, background: 'rgba(245,240,232,0.92)' }}
-            >
-                <div
-                    ref={tabsRef}
-                    className="relative flex gap-1.5 px-3 sm:px-6 py-2 overflow-x-auto hide-scrollbar justify-center"
-                >
-                    {/* Sliding pill */}
+            {/* ── Barra de categorías sticky ── */}
+            {visibleSections.length > 1 && (
+                <div style={{ position: 'sticky', top: 0, zIndex: 50, background: '#F5F0E8', boxShadow: '0 1px 0 rgba(0,0,0,0.07)' }}>
                     <div
-                        className="absolute rounded-full"
-                        style={{
-                            left: pillStyle.left, width: pillStyle.width,
-                            top: '50%', height: 'calc(100% - 16px)',
-                            transform: 'translateY(-50%)', opacity: pillStyle.opacity,
-                            background: '#1a4a1a', boxShadow: '0 0 14px rgba(26,74,26,0.28)',
-                            transition: 'left 0.35s cubic-bezier(0.25,1,0.5,1), width 0.3s cubic-bezier(0.25,1,0.5,1), opacity 0.2s ease',
-                            pointerEvents: 'none', zIndex: 0,
-                        }}
-                    />
-                    {visibleSections.map(cat => {
-                        const active = activeSection === cat.id;
-                        return (
-                            <button
-                                key={cat.id}
-                                ref={el => { btnRefs.current[cat.id] = el; }}
-                                onClick={() => scrollToSection(cat.id)}
-                                className="cursor-pointer relative z-10 shrink-0 px-3 py-2 rounded-full text-[12px] font-semibold uppercase tracking-wider transition-colors duration-300 active:scale-95"
-                                style={active
-                                    ? { color: '#ffffff' }
-                                    : { color: 'rgba(0,0,0,0.50)', boxShadow: '0 0 0 1px rgba(0,0,0,0.10)', background: 'rgba(0,0,0,0.04)' }
-                                }
-                            >
-                                {cat.name}
-                            </button>
-                        );
-                    })}
+                        ref={tabsRef}
+                        className="relative flex gap-1.5 px-3 sm:px-6 py-2 overflow-x-auto hide-scrollbar sm:justify-center"
+                    >
+                        {/* Sliding pill */}
+                        <div
+                            className="absolute rounded-full"
+                            style={{
+                                left: pillStyle.left, width: pillStyle.width,
+                                top: '50%', height: 'calc(100% - 16px)',
+                                transform: 'translateY(-50%)', opacity: pillStyle.opacity,
+                                background: '#1a4a1a', boxShadow: '0 0 14px rgba(26,74,26,0.32)',
+                                transition: 'left 0.35s cubic-bezier(0.25,1,0.5,1), width 0.3s cubic-bezier(0.25,1,0.5,1), opacity 0.2s ease',
+                                pointerEvents: 'none', zIndex: 0,
+                            }}
+                        />
+                        {visibleSections.map(cat => {
+                            const active = activeSection === cat.id;
+                            return (
+                                <button
+                                    key={cat.id}
+                                    ref={el => { btnRefs.current[cat.id] = el; }}
+                                    onClick={() => scrollToSection(cat.id)}
+                                    className="cursor-pointer relative z-10 shrink-0 px-3 py-2 rounded-full text-[12px] font-semibold uppercase tracking-wider transition-colors duration-300 active:scale-95"
+                                    style={active
+                                        ? { color: '#ffffff' }
+                                        : { color: 'rgba(0,0,0,0.50)', boxShadow: '0 0 0 1px rgba(0,0,0,0.10)', background: 'rgba(0,0,0,0.04)' }
+                                    }
+                                >
+                                    {cat.name}
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
-            </div>}
+            )}
 
             {/* ── Secciones ── */}
             <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 flex flex-col gap-12 pt-10">
@@ -210,6 +221,7 @@ export default function Menu({ products, categories, loading, error, refetch }) 
                             <section
                                 key={cat.id}
                                 ref={el => { sectionRefs.current[cat.id] = el; }}
+                                data-section-id={cat.id}
                             >
                                 {/* Header de sección — solo cuando hay más de una */}
                                 {visibleSections.length > 1 && (
@@ -260,7 +272,10 @@ export default function Menu({ products, categories, loading, error, refetch }) 
                     <ProductModal
                         key={modalProduct.id}
                         product={modalProduct}
-                        extras={extras}
+                        extras={extras.filter(e =>
+                            !e.allowed_categories?.length ||
+                            e.allowed_categories.includes(modalProduct.category_id)
+                        )}
                         onClose={() => setModalProduct(null)}
                     />
                 )}

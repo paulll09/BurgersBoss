@@ -38,10 +38,10 @@ export const useCartStore = create(
             },
 
             /* Agrega burger + extras como un único ítem agrupado */
-            addBurger: (product, variant, extras = []) => {
+            addBurger: (product, variant, extras = [], comboOption = null) => {
                 const sorted    = [...extras].sort((a, b) => a.id.localeCompare(b.id));
                 const extrasKey = sorted.map(e => e.id).join('_');
-                const cartKey   = [product.id, variant?.id, extrasKey].filter(Boolean).join('_');
+                const cartKey   = [product.id, variant?.id, comboOption?.id, extrasKey].filter(Boolean).join('_');
 
                 const burgerPrice = Number(variant?.price ?? product.price ?? 0);
                 const extrasTotal = sorted.reduce((s, e) => s + Number(e.price), 0);
@@ -54,16 +54,18 @@ export const useCartStore = create(
                     return {
                         items: [...state.items, {
                             cartKey,
-                            id:            product.id,
-                            name:          product.name,
-                            image_url:     product.image_url || null,
-                            type:          'burger',
-                            category_name: product.category_name || 'Hamburguesas',
-                            variantId:     variant?.id   || null,
-                            variantName:   variant?.name || null,
-                            extras:        sorted.map(e => ({ id: e.id, name: e.name, price: Number(e.price) })),
-                            price:         burgerPrice + extrasTotal,
-                            quantity:      1,
+                            id:              product.id,
+                            name:            product.name,
+                            image_url:       product.image_url || null,
+                            type:            'burger',
+                            category_name:   product.category_name || 'Hamburguesas',
+                            variantId:       variant?.id       || null,
+                            variantName:     variant?.name     || null,
+                            comboOptionId:   comboOption?.id   || null,
+                            comboOptionName: comboOption?.name || null,
+                            extras:          sorted.map(e => ({ id: e.id, name: e.name, price: Number(e.price) })),
+                            price:           burgerPrice + extrasTotal,
+                            quantity:        1,
                         }],
                     };
                 });

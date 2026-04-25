@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Plus, Edit2, Trash2, X, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
@@ -8,20 +8,39 @@ import { inputCls } from '../../utils/styles';
 import { BUSINESS_ID } from '../../lib/config';
 import toast from 'react-hot-toast';
 
-const EMPTY = { name: '', description: '', price: '', display_order: 0 };
+const EMPTY = { name: '', description: '', price: '', display_order: 0, allowed_categories: [] };
 
 export default function AdminExtras() {
     const confirm = useConfirm();
     const { extras, loading, refetch } = useExtras(true);
 
+    const [categories,  setCategories]  = useState([]);
     const [modalOpen,   setModalOpen]   = useState(false);
     const [editing,     setEditing]     = useState(null);
     const [form,        setForm]        = useState(EMPTY);
     const [formLoading, setFormLoading] = useState(false);
 
+    useEffect(() => {
+        supabase.from('categories').select('id, name').eq('business_id', BUSINESS_ID).order('display_order')
+            .then(({ data }) => { if (data) setCategories(data); });
+    }, []);
+
     const openCreate = () => { setEditing(null); setForm(EMPTY); setModalOpen(true); };
-    const openEdit   = (e) => { setEditing(e); setForm({ name: e.name, description: e.description || '', price: e.price, display_order: e.display_order || 0 }); setModalOpen(true); };
+    const openEdit   = (e) => {
+        setEditing(e);
+        setForm({ name: e.name, description: e.description || '', price: e.price, display_order: e.display_order || 0, allowed_categories: e.allowed_categories || [] });
+        setModalOpen(true);
+    };
     const closeModal = () => { setModalOpen(false); setEditing(null); setForm(EMPTY); };
+
+    const toggleCategory = (id) => {
+        setForm(f => ({
+            ...f,
+            allowed_categories: f.allowed_categories.includes(id)
+                ? f.allowed_categories.filter(c => c !== id)
+                : [...f.allowed_categories, id],
+        }));
+    };
 
     const handleSubmit = async (ev) => {
         ev.preventDefault();
@@ -33,6 +52,7 @@ export default function AdminExtras() {
                 description: form.description.trim(),
                 price: parseFloat(form.price),
                 display_order: parseInt(form.display_order) || 0,
+                allowed_categories: form.allowed_categories,
             };
             if (editing) {
                 const { error } = await supabase.from('extras').update(payload).eq('id', editing.id);
@@ -115,6 +135,11 @@ export default function AdminExtras() {
                                 <p className="font-bold text-sm mt-1" style={{ color: '#2d6a2d' }}>
                                     +${Number(extra.price).toLocaleString('es-AR')}
                                 </p>
+                                <p className="text-text-dim text-[11px] mt-0.5">
+                                    {extra.allowed_categories?.length > 0
+                                        ? `Solo en: ${extra.allowed_categories.map(id => categories.find(c => c.id === id)?.name).filter(Boolean).join(', ')}`
+                                        : 'Todos los productos'}
+                                </p>
                             </div>
                             <div className="flex items-center gap-1 shrink-0">
                                 <button onClick={() => handleToggleVisible(extra)}
@@ -195,6 +220,48 @@ export default function AdminExtras() {
                                     onChange={e => setForm({ ...form, display_order: e.target.value })}
                                     className={inputCls} />
                             </div>
+
+                            {categories.length > 0 && (
+                                <div>
+                                    <label className="block text-xs font-semibold text-text-muted uppercase tracking-widest mb-1">
+                                        Mostrar en categorías
+                                    </label>
+                                    <p className="text-text-dim text-[11px] mb-3">
+                                        Sin selección = se muestra en todos los productos.
+                                    </p>
+                                    <div className="flex flex-col gap-2">
+                                        {categories.map(cat => {
+                                            const active = form.allowed_categories.includes(cat.id);
+                                            return (
+                                                <button
+                                                    key={cat.id}
+                                                    type="button"
+                                                    onClick={() => toggleCategory(cat.id)}
+                                                    className="cursor-pointer flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all text-left"
+                                                    style={active
+                                                        ? { border: '2px solid #2d6a2d', background: 'rgba(45,106,45,0.06)' }
+                                                        : { border: '2px solid rgba(0,0,0,0.10)', background: 'transparent' }
+                                                    }
+                                                >
+                                                    <div
+                                                        className="w-4 h-4 rounded flex items-center justify-center shrink-0 transition-all"
+                                                        style={{ background: active ? '#2d6a2d' : 'transparent', border: `2px solid ${active ? '#2d6a2d' : 'rgba(0,0,0,0.25)'}` }}
+                                                    >
+                                                        {active && (
+                                                            <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
+                                                                <path d="M1 3.5L3.5 6L8 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                                                            </svg>
+                                                        )}
+                                                    </div>
+                                                    <span className="font-body text-sm font-medium" style={{ color: active ? '#1a4a1a' : '#555' }}>
+                                                        {cat.name}
+                                                    </span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="flex gap-3 pt-2">
                                 <button type="button" onClick={closeModal}

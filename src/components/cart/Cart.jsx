@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCartStore } from '../../store/cartStore';
 import { WHATSAPP_PHONE, BUSINESS_ID } from '../../lib/config';
@@ -9,7 +9,8 @@ import {
     Store, Truck, LocateFixed, Image as ImageIcon,
     ShoppingBag,
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { PREMIUM_EASE } from '../../lib/motion';
 
 /* ── Design tokens ──────────────────── */
@@ -38,13 +39,151 @@ const itemAnim = {
     exit:    { opacity: 0, x: -20, transition: { duration: 0.2 } },
 };
 
+/* ── Form section — suscripción aislada a checkoutForm ──
+   Evita re-render de items/sticky bar al tipear. */
+const CartFormSection = memo(function CartFormSection({
+    orderType, geoStatus, handleGetLocation, formErrors, clearFieldError,
+}) {
+    const checkoutForm    = useCartStore((s) => s.checkoutForm);
+    const setCheckoutForm = useCartStore((s) => s.setCheckoutForm);
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setCheckoutForm({ [name]: value });
+        if (formErrors[name]) clearFieldError(name);
+    };
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: PREMIUM_EASE }}
+            className="rounded-2xl p-5 mb-8"
+            style={{ background: CARD, boxShadow: CARD_SHADOW }}
+        >
+            <p className="font-display uppercase text-xl mb-5" style={{ color: BLACK }}>
+                Tus datos
+            </p>
+
+            <div className="flex flex-col gap-6">
+                {/* Nombre */}
+                <div>
+                    <label className="flex items-center gap-1.5 font-body text-[10px] font-bold uppercase tracking-[0.22em] mb-1" style={{ color: G }}>
+                        <User className="w-3 h-3" style={{ color: G }} />
+                        Nombre *
+                    </label>
+                    <input
+                        type="text" name="name" value={checkoutForm.name} onChange={handleChange}
+                        placeholder="Ej: Juan Pérez"
+                        className={field(formErrors.name)}
+                    />
+                    {formErrors.name && (
+                        <p className="font-body text-red-500 text-xs mt-1">Nombre es obligatorio</p>
+                    )}
+                </div>
+
+                {/* Dirección */}
+                {orderType === 'delivery' && (
+                    <div className="flex flex-col gap-3 animate-fade-in">
+                        <div>
+                            <label className="flex items-center gap-1.5 font-body text-[10px] font-bold uppercase tracking-[0.22em] mb-1" style={{ color: G }}>
+                                <MapPin className="w-3 h-3" style={{ color: G }} />
+                                Dirección *
+                            </label>
+                            <input
+                                type="text" name="address" value={checkoutForm.address} onChange={handleChange}
+                                placeholder="Ej: Calle Paraguay 1234"
+                                className={field(formErrors.address)}
+                            />
+                            {formErrors.address && (
+                                <p className="font-body text-red-500 text-xs mt-1">Dirección es obligatoria para envío</p>
+                            )}
+                        </div>
+                        <div>
+                            <button
+                                type="button" onClick={handleGetLocation} disabled={geoStatus === 'loading'}
+                                className="cursor-pointer flex items-center justify-center gap-2 w-full py-3 rounded-xl font-body text-xs font-semibold uppercase tracking-widest transition-all"
+                                style={
+                                    geoStatus === 'granted' ? { background: 'rgba(45,106,45,0.08)', color: G, border: `1px solid rgba(45,106,45,0.25)` }
+                                    : geoStatus === 'error'  ? { background: 'rgba(239,68,68,0.05)', color: '#dc2626', border: '1px solid rgba(239,68,68,0.25)' }
+                                    : { background: CARD, color: MUTED, border: '1.5px solid rgba(45,106,45,0.30)' }
+                                }
+                            >
+                                <LocateFixed className="w-3.5 h-3.5" />
+                                {geoStatus === 'loading' ? 'Obteniendo…'
+                                 : geoStatus === 'granted' ? 'Ubicación obtenida ✓'
+                                 : geoStatus === 'error'   ? 'No se pudo obtener'
+                                 : 'Compartir ubicación exacta (opcional)'}
+                            </button>
+                            {geoStatus === 'idle' && (
+                                <p className="font-body text-[10px] mt-1.5 text-center" style={{ color: DIM }}>
+                                    Tu ubicación GPS se enviará junto al pedido por WhatsApp
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Pago */}
+                <div>
+                    <label className="flex items-center gap-1.5 font-body text-[10px] font-bold uppercase tracking-[0.22em] mb-3" style={{ color: G }}>
+                        <CreditCard className="w-3 h-3" style={{ color: G }} />
+                        Medio de pago
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                        {['efectivo', 'transferencia'].map((m) => (
+                            <label
+                                key={m}
+                                className="cursor-pointer rounded-xl py-3 text-center transition-all font-body text-xs font-bold uppercase tracking-widest"
+                                style={checkoutForm.paymentMethod === m
+                                    ? { background: G, color: '#fff', border: `1.5px solid ${G}` }
+                                    : { background: '#fff', color: MUTED, border: '1.5px solid rgba(45,106,45,0.25)' }
+                                }
+                            >
+                                <input type="radio" name="paymentMethod" value={m} checked={checkoutForm.paymentMethod === m} onChange={handleChange} className="hidden" />
+                                {m}
+                            </label>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Notas */}
+                <div>
+                    <label className="flex items-center gap-1.5 font-body text-[10px] font-bold uppercase tracking-[0.22em] mb-1" style={{ color: G }}>
+                        <AlignLeft className="w-3 h-3" style={{ color: G }} />
+                        Aclaraciones <span className="normal-case tracking-normal font-normal ml-1" style={{ color: DIM }}>(opcional)</span>
+                    </label>
+                    <textarea
+                        name="notes" value={checkoutForm.notes} onChange={handleChange}
+                        placeholder="Sin cebolla, sin mayonesa…" rows="2"
+                        className={`${field(false)} resize-none`}
+                    />
+                </div>
+            </div>
+        </motion.div>
+    );
+});
+
 export default function Cart() {
-    const {
-        items, removeItem, updateQuantity, getTotalPrice, clearCart,
-        orderType, setOrderType, checkoutForm, setCheckoutForm,
-    } = useCartStore();
-    const totalPrice = getTotalPrice();
-    const navigate   = useNavigate();
+    /* Hydration guard — evita el flash de carrito vacío mientras Zustand
+       lee el estado persistido del localStorage */
+    const [hydrated, setHydrated] = useState(
+        () => useCartStore.persist.hasHydrated()
+    );
+    useEffect(() => {
+        if (!hydrated) {
+            return useCartStore.persist.onFinishHydration(() => setHydrated(true));
+        }
+    }, [hydrated]);
+
+    const items           = useCartStore((s) => s.items);
+    const removeItem      = useCartStore((s) => s.removeItem);
+    const updateQuantity  = useCartStore((s) => s.updateQuantity);
+    const clearCart       = useCartStore((s) => s.clearCart);
+    const orderType       = useCartStore((s) => s.orderType);
+    const setOrderType    = useCartStore((s) => s.setOrderType);
+
+    const totalPrice = items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
 
     const [formErrors, setFormErrors]     = useState({});
     const [geoLocation, setGeoLocation]   = useState(null);
@@ -53,7 +192,7 @@ export default function Cart() {
     const cooldownRef = useRef(null);
     useEffect(() => () => { if (cooldownRef.current) clearTimeout(cooldownRef.current); }, []);
 
-    const handleGetLocation = () => {
+    const handleGetLocation = useCallback(() => {
         if (!navigator.geolocation) { setGeoStatus('error'); return; }
         setGeoStatus('loading');
         navigator.geolocation.getCurrentPosition(
@@ -61,24 +200,24 @@ export default function Cart() {
             () => setGeoStatus('error'),
             { timeout: 8000 }
         );
-    };
+    }, []);
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setCheckoutForm({ [name]: value });
-        if (formErrors[name]) setFormErrors(p => ({ ...p, [name]: '' }));
-    };
+    const clearFieldError = useCallback((name) => {
+        setFormErrors(p => p[name] ? { ...p, [name]: '' } : p);
+    }, []);
 
-    const validate = () => {
+    const validate = (form) => {
         const errors = {};
-        if (!checkoutForm.name.trim()) errors.name = true;
-        if (orderType === 'delivery' && !checkoutForm.address.trim()) errors.address = true;
+        if (!form.name.trim()) errors.name = true;
+        if (orderType === 'delivery' && !form.address.trim()) errors.address = true;
         setFormErrors(errors);
         return !Object.keys(errors).length;
     };
 
     const handleCheckout = async () => {
-        if (submitting || !orderType || !validate()) return;
+        if (submitting || !orderType) return;
+        const checkoutForm = useCartStore.getState().checkoutForm;
+        if (!validate(checkoutForm)) return;
         setSubmitting(true);
 
 
@@ -86,47 +225,58 @@ export default function Cart() {
         const address = sanitize(checkoutForm.address);
         const notes   = sanitize(checkoutForm.notes);
 
-        /* 1. Crear pedido en Supabase */
+        /* 1. Crear pedido en Supabase — 2 intentos antes de proceder sin número */
         let orderNumber = null;
-        try {
-            const orderItems = items.map(item => ({
-                name:        item.name,
-                variantName: item.variantName || null,
-                quantity:    item.quantity,
-                price:       item.price,
-                extras:      (item.extras ?? []).map(e => ({ name: e.name })),
-            }));
-            const expiresAt = new Date(Date.now() + 45 * 60 * 1000).toISOString();
-            const { data, error: insertError } = await supabase
-                .from('orders')
-                .insert({
-                    business_id:    BUSINESS_ID,
-                    customer_name:  name,
-                    order_type:     orderType,
-                    items:          orderItems,
-                    total:          totalPrice,
-                    payment_method: checkoutForm.paymentMethod,
-                    address:        orderType === 'delivery' ? address || null : null,
-                    notes:          notes || null,
-                    source:         'web',
-                    status:         'pending',
-                    expires_at:     expiresAt,
-                })
-                .select('order_number')
-                .single();
-            if (insertError) console.error('[Order insert]', insertError);
-            if (data) orderNumber = data.order_number;
-        } catch (_) { /* No bloquear WhatsApp si Supabase falla */ }
+        const orderItems = items.map(item => ({
+            name:            item.name,
+            variantName:     item.variantName     || null,
+            comboOptionName: item.comboOptionName || null,
+            quantity:        item.quantity,
+            price:           item.price,
+            extras:          (item.extras ?? []).map(e => ({ name: e.name })),
+        }));
+        const expiresAt = new Date(Date.now() + 90 * 60 * 1000).toISOString();
+        const orderPayload = {
+            business_id:    BUSINESS_ID,
+            customer_name:  name,
+            order_type:     orderType,
+            items:          orderItems,
+            total:          totalPrice,
+            payment_method: checkoutForm.paymentMethod,
+            address:        orderType === 'delivery' ? address || null : null,
+            notes:          notes || null,
+            source:         'web',
+            status:         'pending',
+            expires_at:     expiresAt,
+        };
+
+        for (let attempt = 1; attempt <= 2; attempt++) {
+            try {
+                const { data, error: insertError } = await supabase
+                    .from('orders')
+                    .insert(orderPayload)
+                    .select('order_number')
+                    .single();
+                if (insertError) throw insertError;
+                if (data) { orderNumber = data.order_number; break; }
+            } catch (err) {
+                if (attempt === 2) {
+                    console.error('[Order insert failed after 2 attempts]', err);
+                    toast.error('Tu pedido se enviará por WhatsApp pero no quedó registrado en el sistema. Avisale al local.', { duration: 8000 });
+                }
+            }
+        }
 
         /* 2. Construir mensaje WhatsApp (sin emojis: evita "?" en algunos Android) */
         const numStr = orderNumber ? ` (Ref: *#${String(orderNumber).padStart(4, '0')}*)` : '';
         let text = `Hola! Soy *${name}* y quiero hacer el siguiente pedido${numStr}:\n\n`;
         items.forEach(item => {
             const n = item.variantName ? `${item.name} (${item.variantName})` : item.name;
+            const comboText  = item.comboOptionName ? `\n  > ${item.comboOptionName}` : '';
             const extrasText = item.extras?.length > 0
                 ? `\n  + ${item.extras.map(e => e.name).join(', ')}`
                 : '';
-            text += `- ${item.quantity}x ${n}${extrasText} -- $${(item.price * item.quantity).toLocaleString('es-AR')}\n`;
+            text += `- ${item.quantity}x ${n}${comboText}${extrasText} -- $${(item.price * item.quantity).toLocaleString('es-AR')}\n`;
         });
         text += orderType === 'delivery'
             ? `\n*TOTAL: $${totalPrice.toLocaleString('es-AR')} + envio*\n\n`
@@ -150,6 +300,9 @@ export default function Cart() {
         /* 4. Cooldown 30s contra doble clic */
         cooldownRef.current = setTimeout(() => setSubmitting(false), 30000);
     };
+
+    /* ══ HIDRATANDO ════════════════ */
+    if (!hydrated) return <div style={{ minHeight: '100vh', background: PAGE }} />;
 
     /* ══ VACÍO ══════════════════════ */
     if (items.length === 0) {
@@ -267,6 +420,11 @@ export default function Cart() {
                                         <p className="font-display uppercase text-lg leading-tight truncate" style={{ color: BLACK }}>
                                             {item.name}{item.variantName ? ` (${item.variantName})` : ''}
                                         </p>
+                                        {item.comboOptionName && (
+                                            <p className="font-body text-xs leading-snug mt-0.5" style={{ color: 'rgba(45,106,45,0.85)', fontWeight: 600 }}>
+                                                {item.comboOptionName}
+                                            </p>
+                                        )}
                                         {item.extras?.length > 0 && (
                                             <div className="mt-0.5 flex flex-col gap-0">
                                                 {item.extras.map(e => (
@@ -356,114 +514,13 @@ export default function Cart() {
 
                 {/* ── Formulario ───────────────── */}
                 {orderType && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 16 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, ease: PREMIUM_EASE }}
-                        className="rounded-2xl p-5 mb-8"
-                        style={{ background: CARD, boxShadow: CARD_SHADOW }}
-                    >
-                        <p className="font-display uppercase text-xl mb-5" style={{ color: BLACK }}>
-                            Tus datos
-                        </p>
-
-                        <div className="flex flex-col gap-6">
-                            {/* Nombre */}
-                            <div>
-                                <label className="flex items-center gap-1.5 font-body text-[10px] font-bold uppercase tracking-[0.22em] mb-1" style={{ color: G }}>
-                                    <User className="w-3 h-3" style={{ color: G }} />
-                                    Nombre *
-                                </label>
-                                <input
-                                    type="text" name="name" value={checkoutForm.name} onChange={handleChange}
-                                    placeholder="Ej: Juan Pérez"
-                                    className={field(formErrors.name)}
-                                />
-                                {formErrors.name && (
-                                    <p className="font-body text-red-500 text-xs mt-1">Nombre es obligatorio</p>
-                                )}
-                            </div>
-
-                            {/* Dirección */}
-                            {orderType === 'delivery' && (
-                                <div className="flex flex-col gap-3 animate-fade-in">
-                                    <div>
-                                        <label className="flex items-center gap-1.5 font-body text-[10px] font-bold uppercase tracking-[0.22em] mb-1" style={{ color: G }}>
-                                            <MapPin className="w-3 h-3" style={{ color: G }} />
-                                            Dirección *
-                                        </label>
-                                        <input
-                                            type="text" name="address" value={checkoutForm.address} onChange={handleChange}
-                                            placeholder="Ej: Calle Paraguay 1234"
-                                            className={field(formErrors.address)}
-                                        />
-                                        {formErrors.address && (
-                                            <p className="font-body text-red-500 text-xs mt-1">Dirección es obligatoria para envío</p>
-                                        )}
-                                    </div>
-                                    <div>
-                                        <button
-                                            type="button" onClick={handleGetLocation} disabled={geoStatus === 'loading'}
-                                            className="cursor-pointer flex items-center justify-center gap-2 w-full py-3 rounded-xl font-body text-xs font-semibold uppercase tracking-widest transition-all"
-                                            style={
-                                                geoStatus === 'granted' ? { background: 'rgba(45,106,45,0.08)', color: G, border: `1px solid rgba(45,106,45,0.25)` }
-                                                : geoStatus === 'error'  ? { background: 'rgba(239,68,68,0.05)', color: '#dc2626', border: '1px solid rgba(239,68,68,0.25)' }
-                                                : { background: CARD, color: MUTED, border: '1.5px solid rgba(45,106,45,0.30)' }
-                                            }
-                                        >
-                                            <LocateFixed className="w-3.5 h-3.5" />
-                                            {geoStatus === 'loading' ? 'Obteniendo…'
-                                             : geoStatus === 'granted' ? 'Ubicación obtenida ✓'
-                                             : geoStatus === 'error'   ? 'No se pudo obtener'
-                                             : 'Compartir ubicación exacta (opcional)'}
-                                        </button>
-                                        {geoStatus === 'idle' && (
-                                            <p className="font-body text-[10px] mt-1.5 text-center" style={{ color: DIM }}>
-                                                Tu ubicación GPS se enviará junto al pedido por WhatsApp
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Pago */}
-                            <div>
-                                <label className="flex items-center gap-1.5 font-body text-[10px] font-bold uppercase tracking-[0.22em] mb-3" style={{ color: G }}>
-                                    <CreditCard className="w-3 h-3" style={{ color: G }} />
-                                    Medio de pago
-                                </label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {['efectivo', 'transferencia'].map((m) => (
-                                        <label
-                                            key={m}
-                                            className="cursor-pointer rounded-xl py-3 text-center transition-all font-body text-xs font-bold uppercase tracking-widest"
-                                            style={checkoutForm.paymentMethod === m
-                                                ? { background: G, color: '#fff', border: `1.5px solid ${G}` }
-                                                : { background: '#fff', color: MUTED, border: '1.5px solid rgba(45,106,45,0.25)' }
-                                            }
-                                        >
-                                            <input type="radio" name="paymentMethod" value={m} checked={checkoutForm.paymentMethod === m} onChange={handleChange} className="hidden" />
-                                            {m}
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Notas */}
-                            <div>
-                                <label className="flex items-center gap-1.5 font-body text-[10px] font-bold uppercase tracking-[0.22em] mb-1" style={{ color: G }}>
-                                    <AlignLeft className="w-3 h-3" style={{ color: G }} />
-                                    Aclaraciones <span className="normal-case tracking-normal font-normal ml-1" style={{ color: DIM }}>(opcional)</span>
-                                </label>
-                                <textarea
-                                    name="notes" value={checkoutForm.notes} onChange={handleChange}
-                                    placeholder="Sin cebolla, sin mayonesa…" rows="2"
-                                    className={`${field(false)} resize-none`}
-                                />
-                            </div>
-                        </div>
-
-                    </motion.div>
+                    <CartFormSection
+                        orderType={orderType}
+                        geoStatus={geoStatus}
+                        handleGetLocation={handleGetLocation}
+                        formErrors={formErrors}
+                        clearFieldError={clearFieldError}
+                    />
                 )}
 
                 {/* ── Total + CTA — solo desktop ── */}

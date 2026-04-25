@@ -26,6 +26,65 @@ function toMinutes(timeStr) {
     return h * 60 + m;
 }
 
+function dateStr(d) {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/* Returns the Date that marks the START of the current business session.
+   If the previous day's slot crossed midnight and we're still before closing,
+   we're still in yesterday's session — so start = yesterday's opening time. */
+export function getBusinessDayStart(schedule) {
+    const now = new Date();
+    if (!schedule) { const s = new Date(now); s.setHours(0, 0, 0, 0); return s; }
+
+    const todayIdx     = now.getDay();
+    const yesterdayIdx = (todayIdx + 6) % 7;
+    const nowMinutes   = now.getHours() * 60 + now.getMinutes();
+    const ySlot        = schedule[DAY_KEYS[yesterdayIdx]];
+
+    // Si la sesión de ayer cruza la medianoche y todavía no terminó, seguimos en esa sesión
+    if (ySlot?.open) {
+        const from = toMinutes(ySlot.from);
+        const to   = toMinutes(ySlot.to);
+        if (to < from && nowMinutes < to) {
+            const start = new Date(now);
+            start.setDate(start.getDate() - 1);
+            start.setHours(Math.floor(from / 60), from % 60, 0, 0);
+            return start;
+        }
+    }
+
+    // En cualquier otro caso: inicio de la sesión de hoy (aunque sea futuro → $0 si no abrió)
+    const tSlot = schedule[DAY_KEYS[todayIdx]];
+    const start = new Date(now);
+    if (tSlot?.open) {
+        const from = toMinutes(tSlot.from);
+        start.setHours(Math.floor(from / 60), from % 60, 0, 0);
+    } else {
+        start.setHours(0, 0, 0, 0);
+    }
+    return start;
+}
+
+/* Returns YYYY-MM-DD for the calendar date of the current business session. */
+export function getBusinessDayDate(schedule) {
+    return dateStr(getBusinessDayStart(schedule));
+}
+
+/* One-shot schedule fetch — use inside other hooks to avoid prop-drilling. */
+export async function fetchScheduleOnce() {
+    try {
+        const { data } = await supabase
+            .from('settings')
+            .select('schedule')
+            .eq('business_id', BUSINESS_ID)
+            .single();
+        return data?.schedule ?? null;
+    } catch {
+        return null;
+    }
+}
+
 export function computeIsOpen(schedule) {
     if (import.meta.env.VITE_FORCE_OPEN === 'true') return true;
     if (!schedule) return true;

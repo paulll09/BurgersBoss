@@ -31,7 +31,7 @@ function resizeImage(file) {
 
 
 import { BUSINESS_ID } from '../../lib/config';
-const EMPTY_FORM = { name: '', description: '', price: '', category_id: '', image_url: '', discount: 0, variants: [], type: 'burger', is_new: false, is_featured: false };
+const EMPTY_FORM = { name: '', description: '', price: '', category_id: '', image_url: '', discount: 0, variants: [], combo_options: [], type: 'burger', is_new: false, is_featured: false };
 
 
 export default function AdminProducts() {
@@ -140,6 +140,7 @@ export default function AdminProducts() {
             image_url: product.image_url || '',
             discount: product.discount || 0,
             variants,
+            combo_options: (product.combo_options || []).map(o => ({ id: o.id, name: o.name })),
             type: product.type || 'burger',
             is_new: product.is_new || false,
             is_featured: product.is_featured || false,
@@ -212,6 +213,28 @@ export default function AdminProducts() {
         }));
     };
 
+    /* ── Combo option helpers ── */
+    const addComboOption = () => {
+        setForm(f => ({
+            ...f,
+            combo_options: [...f.combo_options, { id: crypto.randomUUID(), name: '' }],
+        }));
+    };
+
+    const updateComboOption = (idx, value) => {
+        setForm(f => ({
+            ...f,
+            combo_options: f.combo_options.map((o, i) => i === idx ? { ...o, name: value } : o),
+        }));
+    };
+
+    const removeComboOption = (idx) => {
+        setForm(f => ({
+            ...f,
+            combo_options: f.combo_options.filter((_, i) => i !== idx),
+        }));
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -246,6 +269,7 @@ export default function AdminProducts() {
             const variantPrices = form.variants.map(v => parseFloat(v.price));
             const basePrice = hasVariants ? Math.min(...variantPrices) : parseFloat(form.price);
 
+            const validComboOptions = form.combo_options.filter(o => o.name.trim());
             const payload = {
                 name: form.name.trim(),
                 description: form.description.trim(),
@@ -256,6 +280,7 @@ export default function AdminProducts() {
                 type: form.type || 'burger',
                 is_new: form.is_new || false,
                 is_featured: form.is_featured || false,
+                combo_options: validComboOptions,
             };
 
             let productId;
@@ -845,6 +870,47 @@ export default function AdminProducts() {
                                         </div>
                                     ) : (
                                         <p className="text-text-dim text-xs">Sin variantes. El producto tendrá un precio único.</p>
+                                    )}
+                                </div>
+
+                                {/* ── Combo options section ── */}
+                                <div>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <label className="block text-xs font-semibold text-text-muted uppercase tracking-widest">Opciones del combo</label>
+                                        <button
+                                            type="button"
+                                            onClick={addComboOption}
+                                            className="cursor-pointer flex items-center gap-1 text-xs text-primary font-semibold hover:underline"
+                                        >
+                                            <Plus className="w-3.5 h-3.5" />
+                                            Agregar opción
+                                        </button>
+                                    </div>
+
+                                    {form.combo_options.length > 0 ? (
+                                        <div className="flex flex-col gap-2">
+                                            {form.combo_options.map((o, idx) => (
+                                                <div key={o.id} className="flex items-center gap-2">
+                                                    <input
+                                                        type="text"
+                                                        value={o.name}
+                                                        onChange={(e) => updateComboOption(idx, e.target.value)}
+                                                        placeholder={`Ej: Pileta de cheddar`}
+                                                        className={`${inputCls} text-sm py-2.5 flex-1`}
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeComboOption(idx)}
+                                                        className="cursor-pointer p-2 text-red-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                            <p className="text-text-dim text-[11px] italic">El cliente deberá elegir una opción obligatoriamente.</p>
+                                        </div>
+                                    ) : (
+                                        <p className="text-text-dim text-xs">Sin opciones. Usá esto para combos donde el cliente elige entre alternativas.</p>
                                     )}
                                 </div>
 

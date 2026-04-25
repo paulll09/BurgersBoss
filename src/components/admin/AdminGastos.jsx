@@ -1,8 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Plus, Trash2, Edit2, X, Tag, Check } from 'lucide-react';
 import { useExpenses, useExpenseCategories } from '../../hooks/useExpenses';
+import { getBusinessDayDate, fetchScheduleOnce } from '../../hooks/useSchedule';
 import { useConfirm } from '../ui/ConfirmDialog';
 import { inputCls } from '../../utils/styles';
 import toast from 'react-hot-toast';
@@ -170,13 +171,35 @@ function localToday() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+async function getSessionDate() {
+    try {
+        const schedule = await fetchScheduleOnce();
+        return getBusinessDayDate(schedule);
+    } catch {
+        return localToday();
+    }
+}
+
 const EMPTY = { amount: '', description: '', category_id: '', date: localToday() };
 
-function ExpenseForm({ categories, onSave, editingExpense, onCancelEdit }) {
+function ExpenseFormWithDate(props) {
+    const [sessionDate, setSessionDate] = useState(localToday());
+    useEffect(() => { getSessionDate().then(setSessionDate); }, []);
+    return <ExpenseForm {...props} defaultDate={sessionDate} />;
+}
+
+function ExpenseForm({ categories, onSave, editingExpense, onCancelEdit, defaultDate }) {
     const [form, setForm]   = useState(editingExpense
         ? { amount: editingExpense.amount, description: editingExpense.description ?? '', category_id: editingExpense.category_id ?? '', date: editingExpense.date }
-        : EMPTY
+        : { ...EMPTY, date: defaultDate ?? localToday() }
     );
+
+    // Actualizar la fecha default cuando carga la fecha de sesión
+    useEffect(() => {
+        if (!editingExpense && defaultDate) {
+            setForm(p => ({ ...p, date: defaultDate }));
+        }
+    }, [defaultDate]);
     const [saving, setSaving] = useState(false);
 
     const handleSubmit = async (e) => {
@@ -312,7 +335,7 @@ export default function AdminGastos() {
             </div>
 
             {/* Expense form */}
-            <ExpenseForm
+            <ExpenseFormWithDate
                 key={editingExp?.id ?? 'new'}
                 categories={categories}
                 onSave={handleSave}

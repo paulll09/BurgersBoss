@@ -25,9 +25,10 @@ export default function ProductCard({ product, categoryName, onOpenModal }) {
     const [imgLoaded, setImgLoaded] = useState(false);
     const reduced    = useReducedMotion();
 
-    const variants    = product.product_variants || [];
-    const hasVariants = variants.length > 0;
-    const isBurger    = hasVariants && (product.type === 'burger' || !product.type);
+    const variants        = product.product_variants || [];
+    const hasVariants     = variants.length > 0;
+    const hasComboOptions = (product.combo_options?.length ?? 0) > 0;
+    const isBurger        = hasVariants && (product.type === 'burger' || !product.type);
     const [expanded, setExpanded] = useState(false);
     const [showVariants, setShowVariants] = useState(false);
     const descRef = useRef(null);
@@ -35,16 +36,22 @@ export default function ProductCard({ product, categoryName, onOpenModal }) {
 
     useEffect(() => {
         const el = descRef.current;
-        if (el) setIsClamped(el.scrollHeight > el.clientHeight + 2);
+        if (!el) return;
+        // Defer layout read al siguiente frame — evita forced sync layout
+        // en el mount inicial (clave cuando hay muchos cards en la grid).
+        const raf = requestAnimationFrame(() => {
+            setIsClamped(el.scrollHeight > el.clientHeight + 2);
+        });
+        return () => cancelAnimationFrame(raf);
     }, [product.description]);
 
     const handleAdd = useCallback((e) => {
         e.stopPropagation();
-        if (isBurger && onOpenModal) { onOpenModal(); return; }
+        if ((isBurger || hasComboOptions) && onOpenModal) { onOpenModal(); return; }
         const price = getEffectivePrice(product);
         addItem({ ...product, category_name: categoryName, price, originalPrice: product.price });
         toast.success(`${product.name} agregado`);
-    }, [isBurger, onOpenModal, product, categoryName, addItem]);
+    }, [isBurger, hasComboOptions, onOpenModal, product, categoryName, addItem]);
 
     const handleAddVariant = useCallback((e, variant) => {
         e.stopPropagation();
@@ -159,7 +166,7 @@ export default function ProductCard({ product, categoryName, onOpenModal }) {
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    if (isBurger && onOpenModal) { onOpenModal(); }
+                                    if ((isBurger || hasComboOptions) && onOpenModal) { onOpenModal(); }
                                     else { setExpanded(true); }
                                 }}
                                 style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', marginTop: '2px' }}
