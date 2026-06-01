@@ -71,18 +71,36 @@ export function getBusinessDayDate(schedule) {
     return dateStr(getBusinessDayStart(schedule));
 }
 
-/* One-shot schedule fetch — use inside other hooks to avoid prop-drilling. */
+/* One-shot schedule fetch — use inside other hooks to avoid prop-drilling.
+   Module-level cache: only one network call per session unless invalidated. */
+let _scheduleCache = undefined;
+let _schedulePromise = null;
+
+export function invalidateScheduleCache() {
+    _scheduleCache = undefined;
+    _schedulePromise = null;
+}
+
 export async function fetchScheduleOnce() {
-    try {
-        const { data } = await supabase
-            .from('settings')
-            .select('schedule')
-            .eq('business_id', BUSINESS_ID)
-            .single();
-        return data?.schedule ?? null;
-    } catch {
-        return null;
-    }
+    if (_scheduleCache !== undefined) return _scheduleCache;
+    if (_schedulePromise) return _schedulePromise;
+    _schedulePromise = (async () => {
+        try {
+            const { data } = await supabase
+                .from('settings')
+                .select('schedule')
+                .eq('business_id', BUSINESS_ID)
+                .single();
+            _scheduleCache = data?.schedule ?? null;
+            return _scheduleCache;
+        } catch {
+            _scheduleCache = null;
+            return null;
+        } finally {
+            _schedulePromise = null;
+        }
+    })();
+    return _schedulePromise;
 }
 
 export function computeIsOpen(schedule) {
@@ -161,6 +179,7 @@ export function useSchedule() {
             .update({ schedule: newSchedule })
             .eq('business_id', BUSINESS_ID);
         if (error) throw error;
+        invalidateScheduleCache();
         setSchedule(newSchedule);
     };
 

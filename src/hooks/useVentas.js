@@ -176,7 +176,8 @@ export function useVentas(period) {
             : DATE_RE.test(period) ? period : null;
 
         const [{ data: cur }, { data: prev }, totalExpenses] = await Promise.all([
-            supabase.from('orders').select('*')
+            supabase.from('orders')
+                .select('total, delivery_fee, items, order_type, payment_method, created_at')
                 .eq('business_id', BUSINESS_ID).in('status', SALE_STATUSES)
                 .gte('created_at', start.toISOString()).lte('created_at', end.toISOString()),
             supabase.from('orders').select('total, delivery_fee')

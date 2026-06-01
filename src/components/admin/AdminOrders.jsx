@@ -734,7 +734,8 @@ export default function AdminOrders() {
             .in('status', ['printed', 'cancelled', 'expired'])
             .gte('created_at', from)
             .lte('created_at', to)
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false })
+            .limit(200);
         if (error) toast.error('Error al cargar historial');
         setHistory(data ?? []);
         setHistoryLoading(false);
