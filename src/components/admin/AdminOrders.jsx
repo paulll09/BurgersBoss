@@ -14,6 +14,7 @@ import { useExtras } from '../../hooks/useExtras';
 import { useConfirm } from '../ui/ConfirmDialog';
 import { printTicket } from '../../lib/printTicket';
 import { inputCls } from '../../utils/styles';
+import { getEffectivePrice, getEffectiveVariantPrice } from '../../utils/price';
 import toast from 'react-hot-toast';
 
 /* ── Design tokens ── */
@@ -344,7 +345,9 @@ function ManualOrderModal({ onClose, onCreate }) {
         const product = products.find(p => p.id === productId);
         if (!product) { updateItem(i, { ...EMPTY_ITEM }); return; }
         const firstVariant = product.product_variants?.[0];
-        const basePrice = Number(firstVariant?.price ?? product.price ?? 0);
+        const basePrice = firstVariant
+            ? getEffectiveVariantPrice(firstVariant)
+            : getEffectivePrice(product);
         updateItem(i, {
             productId:   product.id,
             name:        product.name,
@@ -359,7 +362,7 @@ function ManualOrderModal({ onClose, onCreate }) {
     const handleVariantChange = (i, variantId) => {
         const product   = products.find(p => p.id === items[i].productId);
         const variant   = product?.product_variants?.find(v => v.id === variantId);
-        const basePrice = Number(variant?.price ?? 0);
+        const basePrice = variant ? getEffectiveVariantPrice(variant) : 0;
         const extrasSum = items[i].extras.reduce((s, e) => s + Number(e.price), 0);
         updateItem(i, {
             variantId:   variantId,
@@ -518,7 +521,7 @@ function ManualOrderModal({ onClose, onCreate }) {
                                                 >
                                                     {selectedProduct.product_variants.map(v => (
                                                         <option key={v.id} value={v.id}>
-                                                            {v.name} — ${Number(v.price).toLocaleString('es-AR')}
+                                                            {v.name} — ${getEffectiveVariantPrice(v).toLocaleString('es-AR')}
                                                         </option>
                                                     ))}
                                                 </select>

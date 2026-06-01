@@ -7,6 +7,7 @@ import { useProducts } from '../../hooks/useProducts';
 import toast from 'react-hot-toast';
 import { inputCls } from '../../utils/styles';
 import { useConfirm } from '../ui/ConfirmDialog';
+import { getEffectiveVariantPrice } from '../../utils/price';
 
 /* ── Resize image to 800x600 (cover + center crop) ── */
 function resizeImage(file) {
@@ -356,14 +357,16 @@ export default function AdminProducts() {
     const renderAdminPrice = (product) => {
         const variants = product.product_variants || [];
         if (variants.length > 0) {
-            const prices = variants.map(v => v.price);
+            const prices = variants.map(v => getEffectiveVariantPrice(v));
             const min = Math.min(...prices);
             const max = Math.max(...prices);
+            const hasVariantDiscount = variants.some(v => (v.discount || 0) > 0);
             return (
                 <div>
                     <span className="font-bold text-sm" style={{ color: '#2d6a2d' }}>
                         ${min.toLocaleString('es-AR')}{min !== max ? ` - $${max.toLocaleString('es-AR')}` : ''}
                     </span>
+                    {hasVariantDiscount && <span className="text-[10px] font-bold text-primary ml-1">desc.</span>}
                     <span className="text-text-dim text-[10px] ml-1.5">{variants.length} var.</span>
                 </div>
             );

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { getEffectiveVariantPrice, getEffectivePrice } from '../utils/price';
 
 const EMPTY_FORM = { name: '', address: '', paymentMethod: 'efectivo', notes: '' };
 
@@ -43,7 +44,9 @@ export const useCartStore = create(
                 const extrasKey = sorted.map(e => e.id).join('_');
                 const cartKey   = [product.id, variant?.id, comboOption?.id, extrasKey].filter(Boolean).join('_');
 
-                const burgerPrice = Number(variant?.price ?? product.price ?? 0);
+                const burgerPrice = variant
+                    ? getEffectiveVariantPrice(variant)
+                    : getEffectivePrice(product);
                 const extrasTotal = sorted.reduce((s, e) => s + Number(e.price), 0);
 
                 set((state) => {

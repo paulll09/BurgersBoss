@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Plus, Image as ImageIcon } from 'lucide-react';
 import { useCartStore } from '../../store/cartStore';
 import { BarCtx } from '../../context/barCtx';
-import { getEffectivePrice, hasDiscount } from '../../utils/price';
+import { getEffectivePrice, getEffectiveVariantPrice, hasDiscount } from '../../utils/price';
 import { VIEWPORT, PREMIUM_EASE, lineStagger, lineSlideUp } from '../../lib/motion';
 import toast from 'react-hot-toast';
 
@@ -77,7 +77,7 @@ const SpotlightCard = memo(function SpotlightCard({ product, badgeType, onOpenMo
     const needsModal      = hasVariants || hasComboOptions;
 
     const price = hasVariants
-        ? Math.min(...variants.map(v => v.price))
+        ? Math.min(...variants.map(v => getEffectiveVariantPrice(v)))
         : getEffectivePrice(product);
 
     const openModal = useCallback(() => {
