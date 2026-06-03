@@ -157,7 +157,7 @@ export function useOrders() {
 }
 
 /* ── Lightweight hook just for the sidebar badge ──
-   Uses local payload diff; falls back to head-count only when state drifts. */
+   Refetches on each event (head:true → server returns count only, no rows). */
 export function useOrdersCount() {
     const [count, setCount] = useState(0);
     const channelIdRef = useRef(`orders-count-${uniqueId()}`);
@@ -178,36 +178,11 @@ export function useOrdersCount() {
         const channel = supabase
             .channel(channelIdRef.current)
             .on('postgres_changes', {
-                event: 'INSERT',
+                event: '*',
                 schema: 'public',
                 table: 'orders',
                 filter: `business_id=eq.${BUSINESS_ID}`,
-            }, ({ new: row }) => {
-                if (isActive(row) && row.status === 'pending') {
-                    setCount(c => c + 1);
-                }
-            })
-            .on('postgres_changes', {
-                event: 'UPDATE',
-                schema: 'public',
-                table: 'orders',
-                filter: `business_id=eq.${BUSINESS_ID}`,
-            }, ({ new: newRow, old: oldRow }) => {
-                const wasPending = oldRow?.status === 'pending';
-                const isPending  = newRow?.status === 'pending' && isActive(newRow);
-                if (wasPending === isPending) return;
-                setCount(c => Math.max(0, c + (isPending ? 1 : -1)));
-            })
-            .on('postgres_changes', {
-                event: 'DELETE',
-                schema: 'public',
-                table: 'orders',
-                filter: `business_id=eq.${BUSINESS_ID}`,
-            }, ({ old: row }) => {
-                if (row?.status === 'pending') {
-                    setCount(c => Math.max(0, c - 1));
-                }
-            })
+            }, fetchCount)
             .subscribe((status) => {
                 if (status === 'SUBSCRIBED') fetchCount();
             });

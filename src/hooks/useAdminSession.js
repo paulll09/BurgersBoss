@@ -23,8 +23,8 @@ export function useAdminSession() {
             }
 
             const { data: { user } } = await supabase.auth.getUser();
-            const metaBid = user?.user_metadata?.business_id;
-            if (metaBid !== undefined && metaBid !== BUSINESS_ID) {
+            const metaBid = user?.app_metadata?.business_id;
+            if (metaBid !== BUSINESS_ID) {
                 await supabase.auth.signOut();
                 if (!cancelled) { setStatus('denied'); navigate('/admin'); }
                 return;
