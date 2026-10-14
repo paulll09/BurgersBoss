@@ -34,3 +34,6 @@ public/config.js
 *.njsproj
 *.sln
 *.sw?
+
+# Image migration report (contains storage paths, not secrets)
+scripts/.image-migration-report.json

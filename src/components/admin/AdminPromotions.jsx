@@ -1,42 +1,24 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Edit2, Trash2, Eye, EyeOff, X, Upload, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { usePromotions } from '../../hooks/usePromotions';
 import toast from 'react-hot-toast';
 import { inputCls } from '../../utils/styles';
 import { useConfirm } from '../ui/ConfirmDialog';
+import { resizePromoImage } from '../../utils/image';
 
 const DAY_KEYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 const DAY_LABELS = { monday: 'Lun', tuesday: 'Mar', wednesday: 'Mié', thursday: 'Jue', friday: 'Vie', saturday: 'Sáb', sunday: 'Dom' };
 const DAY_LABELS_FULL = { monday: 'Lunes', tuesday: 'Martes', wednesday: 'Miércoles', thursday: 'Jueves', friday: 'Viernes', saturday: 'Sábado', sunday: 'Domingo' };
-
-/* ── Resize image preserving aspect ratio (max 1200px wide) ── */
-function resizeImage(file) {
-    return new Promise((resolve) => {
-        const img = new Image();
-        img.onload = () => {
-            URL.revokeObjectURL(img.src);
-            const MAX_W = 1200;
-            const scale = img.naturalWidth > MAX_W ? MAX_W / img.naturalWidth : 1;
-            const W = Math.round(img.naturalWidth * scale);
-            const H = Math.round(img.naturalHeight * scale);
-            const canvas = document.createElement('canvas');
-            canvas.width = W; canvas.height = H;
-            canvas.getContext('2d').drawImage(img, 0, 0, W, H);
-            canvas.toBlob((blob) => {
-                resolve(blob ? new File([blob], `promo-${Date.now()}.jpg`, { type: 'image/jpeg' }) : null);
-            }, 'image/jpeg', 0.92);
-        };
-        img.src = URL.createObjectURL(file);
-    });
-}
 
 import { BUSINESS_ID } from '../../lib/config';
 const EMPTY_FORM = { title: '', image_url: '', days: [], display_order: 0 };
 
 export default function AdminPromotions() {
     const confirm = useConfirm();
+    const navigate = useNavigate();
     const { promotions, loading, refetch } = usePromotions(true);
     const [modalOpen, setModalOpen] = useState(false);
     const [editing, setEditing] = useState(null);
@@ -120,7 +102,7 @@ export default function AdminPromotions() {
         const file = e.target.files[0];
         if (!file) return;
         e.target.value = '';
-        const resized = await resizeImage(file);
+        const resized = await resizePromoImage(file);
         if (resized) {
             setImagePreview(prev => {
                 if (prev && prev.startsWith('blob:')) URL.revokeObjectURL(prev);
@@ -139,7 +121,11 @@ export default function AdminPromotions() {
             throw new Error(`La imagen no puede superar los ${MAX_MB} MB.`);
         const ext = file.type.split('/')[1];
         const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-        const { error } = await supabase.storage.from('promo-images').upload(filename, file);
+        // Filenames are timestamped, so a long cache is safe: replacing an image
+        // yields a new URL and viewers see it immediately.
+        const { error } = await supabase.storage
+            .from('promo-images')
+            .upload(filename, file, { cacheControl: '31536000' });
         if (error) throw error;
         const { data } = supabase.storage.from('promo-images').getPublicUrl(filename);
         return data.publicUrl;

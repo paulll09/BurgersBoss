@@ -8,27 +8,8 @@ import toast from 'react-hot-toast';
 import { inputCls } from '../../utils/styles';
 import { useConfirm } from '../ui/ConfirmDialog';
 import { getEffectiveVariantPrice } from '../../utils/price';
+import { resizeProductImage } from '../../utils/image';
 
-/* ── Resize image to 800x600 (cover + center crop) ── */
-function resizeImage(file) {
-    return new Promise((resolve) => {
-        const img = new Image();
-        img.onload = () => {
-            URL.revokeObjectURL(img.src);
-            const SIZE = 800;
-            const side = Math.min(img.naturalWidth, img.naturalHeight);
-            const sx = (img.naturalWidth  - side) / 2;
-            const sy = (img.naturalHeight - side) / 2;
-            const canvas = document.createElement('canvas');
-            canvas.width = SIZE; canvas.height = SIZE;
-            canvas.getContext('2d').drawImage(img, sx, sy, side, side, 0, 0, SIZE, SIZE);
-            canvas.toBlob((blob) => {
-                resolve(blob ? new File([blob], `product-${Date.now()}.jpg`, { type: 'image/jpeg' }) : null);
-            }, 'image/jpeg', 0.92);
-        };
-        img.src = URL.createObjectURL(file);
-    });
-}
 
 
 import { BUSINESS_ID } from '../../lib/config';
@@ -167,7 +148,7 @@ export default function AdminProducts() {
         const file = e.target.files[0];
         if (!file) return;
         e.target.value = '';
-        const resized = await resizeImage(file);
+        const resized = await resizeProductImage(file);
         if (resized) {
             setImagePreview(prev => {
                 if (prev && prev.startsWith('blob:')) URL.revokeObjectURL(prev);
@@ -186,7 +167,11 @@ export default function AdminProducts() {
             throw new Error(`La imagen no puede superar los ${MAX_MB} MB.`);
         const ext = file.type.split('/')[1];
         const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-        const { error } = await supabase.storage.from('product-images').upload(filename, file);
+        // Filenames are timestamped, so a long cache is safe: replacing an image
+        // yields a new URL and viewers see it immediately.
+        const { error } = await supabase.storage
+            .from('product-images')
+            .upload(filename, file, { cacheControl: '31536000' });
         if (error) throw error;
         const { data } = supabase.storage.from('product-images').getPublicUrl(filename);
         return data.publicUrl;
