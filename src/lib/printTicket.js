@@ -37,50 +37,56 @@ function buildHTML(order) {
 <meta charset="UTF-8">
 <title>Comanda #${padNum(order.order_number)}</title>
 <style>
-  @page { size: 58mm auto; margin: 3mm 2mm; }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  @page { size: 58mm auto; margin: 3mm 1.5mm; }
+  * { margin: 0; padding: 0; box-sizing: border-box; color: #000 !important; }
   body {
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 11.5px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12.5px;
+    font-weight: bold;
     width: 54mm;
     color: #000;
     background: #fff;
-    line-height: 1.4;
+    line-height: 1.3;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
   .title {
-    font-size: 17px;
-    font-weight: bold;
+    font-size: 18px;
+    font-weight: 900;
     text-align: center;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
     margin: 4px 0 3px;
   }
-  .solid { border-top: 1.5px solid #000; margin: 5px 0; }
+  .solid { border-top: 2px solid #000; margin: 5px 0; }
   .dashed { border-top: 1px dashed #000; margin: 5px 0; }
   .row { margin: 2px 0; }
   .bold { font-weight: bold; }
   .item {
     display: flex;
     gap: 3px;
-    margin: 3px 0 1px;
+    margin: 4px 0 2px;
+    font-size: 12.5px;
+    font-weight: bold;
   }
-  .qty   { flex-shrink: 0; width: 20px; }
-  .iname { flex: 1; word-break: break-word; }
-  .iprice { flex-shrink: 0; text-align: right; }
-  .extra { font-size: 10px; padding-left: 22px; color: #444; margin-bottom: 1px; }
+  .qty   { flex-shrink: 0; width: 22px; font-weight: 900; }
+  .iname { flex: 1; word-break: break-word; font-weight: bold; }
+  .iprice { flex-shrink: 0; text-align: right; font-weight: bold; }
+  .extra { font-size: 11.5px; padding-left: 15px; color: #000 !important; font-weight: bold; margin-bottom: 2px; }
   .total-row {
     display: flex;
     justify-content: space-between;
     font-weight: bold;
-    font-size: 13.5px;
+    font-size: 14px;
     margin: 4px 0 2px;
   }
-  .meta { font-size: 10.5px; color: #333; margin: 1px 0; }
-  .address { font-size: 10px; color: #333; margin: 1px 0; }
+  .meta { font-size: 12px; color: #000 !important; font-weight: bold; margin: 2px 0; }
+  .address { font-size: 11.5px; color: #000 !important; font-weight: bold; margin: 2px 0; }
   .thanks {
     text-align: center;
-    font-size: 11px;
+    font-size: 12px;
+    font-weight: bold;
     margin-top: 10px;
-    line-height: 1.6;
+    line-height: 1.5;
   }
 </style>
 </head>
@@ -101,11 +107,11 @@ function buildHTML(order) {
   <div class="solid"></div>
 
   ${deliveryFee > 0 ? `
-  <div class="total-row" style="font-size:11px;font-weight:normal">
+  <div class="total-row" style="font-size:12px;font-weight:bold">
     <span>Subtotal</span>
     <span>${fmt(subtotal)}</span>
   </div>
-  <div class="total-row" style="font-size:11px;font-weight:normal">
+  <div class="total-row" style="font-size:12px;font-weight:bold">
     <span>Costo de envio</span>
     <span>${fmt(deliveryFee)}</span>
   </div>
