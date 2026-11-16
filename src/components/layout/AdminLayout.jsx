@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useOrdersCount } from '../../hooks/useOrders';
+import SubscriptionBanner from '../admin/SubscriptionBanner';
 
 /* ── Design tokens ── */
 const SIDEBAR_BG   = '#1a4a1a';
@@ -184,6 +185,7 @@ export default function AdminLayout() {
 
                 {/* Page content */}
                 <div className="px-4 sm:px-8 py-6 pb-28 sm:pb-10">
+                    <SubscriptionBanner />
                     <Outlet />
                 </div>
             </main>
